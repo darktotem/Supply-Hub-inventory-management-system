@@ -4,6 +4,7 @@ function RegSuppliers() {
     const [suppliers, setSuppliers] = useState([])
     const [formData, setFormData] = useState({
         name: '',
+        contactPerson: '',
         email: '',
         phone: '',
         address: ''
@@ -28,6 +29,7 @@ function RegSuppliers() {
 
         setFormData({
             name: '',
+            contactPerson: '',
             email: '',
             phone: '',
             address: ''
@@ -45,6 +47,7 @@ function RegSuppliers() {
 
             <form onSubmit={handleSubmit} className="supplier-form">
                 <h3>Register New Supplier</h3>
+
                 <input
                     type="text"
                     name="name"
@@ -53,6 +56,16 @@ function RegSuppliers() {
                     onChange={handleChange}
                     required
                 />
+
+                <input
+                    type="text"
+                    name="contactPerson"
+                    placeholder="Contact Person"
+                    value={formData.contactPerson}
+                    onChange={handleChange}
+                    required
+                />
+
                 <input
                     type="email"
                     name="email"
@@ -90,6 +103,7 @@ function RegSuppliers() {
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Contact Person</th>
                                 <th>Email</th>
                                 <th>Phone</th>
                                 <th>Address</th>
@@ -100,6 +114,7 @@ function RegSuppliers() {
                             {suppliers.map((supplier) => (
                                 <tr key={supplier.id}>
                                     <td>{supplier.name}</td>
+                                    <td>{supplier.contactPerson}</td>
                                     <td>{supplier.email}</td>
                                     <td>{supplier.phone}</td>
                                     <td>{supplier.address}</td>
