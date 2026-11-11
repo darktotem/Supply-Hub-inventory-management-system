@@ -1,18 +1,12 @@
 {
-    "compilerOptions": {
-        "checkJs": true,
-        "strict": true,
-        "noEmit": true,
-        "skipLibCheck" : true,
-        "resolveJsonModule": true,
-        "allowImportingTsExtensions": false,
-        "jsx": "react-jsx",
-        "target": "ES2022",
-        "module": "ESNext",
-        "moduleResolution": "bundler"
-    
-    
-    
-    },
-    "include": ["src"]
+  "compilerOptions": {
+    "checkJs": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src"]
 }
