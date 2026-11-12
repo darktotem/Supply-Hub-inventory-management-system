@@ -119,4 +119,23 @@ def delete_inventory(item_id):
 
     return jsonify({"message": "Inventory item deleted successfully"}), 200
 
+    @app.route("/api/inventory/low-stock", methods=["GET"])
+def get_low_stock():
+    inventory = Inventory.query.filter(
+        Inventory.quantity <= Inventory.threshold
+    ).all()
+
+    return jsonify([
+        {
+            "id": item.id,
+            "product_name": item.product_name,
+            "category": item.category,
+            "quantity": item.quantity,
+            "threshold": item.threshold,
+            "price": item.price
+        }
+        for item in inventory
+    ]), 200
+
+
     
