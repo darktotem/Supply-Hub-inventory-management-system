@@ -15,7 +15,6 @@ importlib-metadata = "*"
 importlib-resources = "*"
 flask-bcrypt = "*"
 PyJWT = "*"
-bcrypt = "*"
 
 [dev-packages]
 pytest = "*"
