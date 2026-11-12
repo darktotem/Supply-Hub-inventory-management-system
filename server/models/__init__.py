@@ -1,0 +1,1 @@
+from models.inventory import Inventory
