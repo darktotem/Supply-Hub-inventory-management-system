@@ -58,4 +58,21 @@ def get_inventory():
     ]), 200
 
 
+    @app.route("/api/inventory/<int:item_id>", methods=["GET"])
+def get_inventory_item(item_id):
+    item = db.session.get(Inventory, item_id)
+
+    if not item:
+        return jsonify({"error": "Inventory item not found"}), 404
+
+    return jsonify({
+        "id": item.id,
+        "product_name": item.product_name,
+        "category": item.category,
+        "quantity": item.quantity,
+        "threshold": item.threshold,
+        "price": item.price
+    }), 200
+
+
     
