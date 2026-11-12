@@ -62,10 +62,15 @@ class ChangeUsernameSchema(BaseSchema):
     password = fields.String(required=True)
 
 
-class RecoverPasswordSchema(BaseSchema):
+class VerifyRecoveryCodeSchema(BaseSchema):
     username = fields.String(required=True)
     recovery_code = fields.String(required=True)
+
+
+class SetNewPasswordSchema(BaseSchema):
+    reset_token = fields.String(required=True)
     new_password = Password(required=True)
+    confirm_password = fields.String(required=True)
 
 
 class RegisterEmployeeSchema(BaseSchema):
