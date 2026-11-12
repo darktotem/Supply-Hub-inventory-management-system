@@ -40,3 +40,22 @@ def add_inventory():
         "threshold": item.threshold,
         "price": item.price
     }), 201
+
+    @app.route("/api/inventory", methods=["GET"])
+def get_inventory():
+    inventory = Inventory.query.all()
+
+    return jsonify([
+        {
+            "id": item.id,
+            "product_name": item.product_name,
+            "category": item.category,
+            "quantity": item.quantity,
+            "threshold": item.threshold,
+            "price": item.price
+        }
+        for item in inventory
+    ]), 200
+
+
+    
