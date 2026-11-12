@@ -3,10 +3,9 @@ from marshmallow import ValidationError
 from app import app
 from extensions import db
 from models.inventory import Inventory
-from schemas.inventory_schema import InventorySchema
+from schemas.inventory_schema import inventory_schema, search_schema
 
 
-inventory_schema = InventorySchema()
 
 
 @app.post("/api/inventory")
@@ -88,3 +87,24 @@ def get_low_stock():
     ).all()
 
     return inventory_schema.dump(inventory, many=True), 200    
+
+
+@app.post("/api/search")
+def search_inventory():
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return {"error": "Request body is required"}, 400
+
+    try:
+        validated_data = search_schema.load(data)
+    except ValidationError as err:
+        return {"errors": err.messages}, 400
+
+    product_name = validated_data["product_name"]
+
+    inventory = Inventory.query.filter(
+        Inventory.product_name.ilike(f"%{product_name}%")
+    ).all()
+
+    return inventory_schema.dump(inventory, many=True), 200
