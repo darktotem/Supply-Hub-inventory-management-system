@@ -27,3 +27,12 @@ def create_inventory():
     db.session.commit()
 
     return inventory_schema.dump(item), 201
+
+@app.get("/api/inventory")
+def get_inventory():
+    inventory = Inventory.query.all()
+
+    return inventory_schema.dump(inventory, many=True), 200
+
+
+
