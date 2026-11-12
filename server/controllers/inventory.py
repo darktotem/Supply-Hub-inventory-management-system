@@ -69,5 +69,14 @@ def update_inventory(item_id):
 
     return inventory_schema.dump(item), 200
 
+@app.delete("/api/inventory/<int:item_id>")
+def delete_inventory(item_id):
+    item = db.session.get(Inventory, item_id)
 
+    if not item:
+        return {"error": "Inventory item not found"}, 404
 
+    db.session.delete(item)
+    db.session.commit()
+
+    return {"message": "Inventory item deleted successfully"}, 200    
