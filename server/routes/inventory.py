@@ -138,4 +138,30 @@ def get_low_stock():
     ]), 200
 
 
-    
+    """
+INVENTORY ROUTES
+
+1. CREATE INVENTORY ITEM
+   Method: POST
+   Endpoint: /api/inventory
+
+2. VIEW ALL INVENTORY ITEMS
+   Method: GET
+   Endpoint: /api/inventory
+
+3. VIEW ONE INVENTORY ITEM
+   Method: GET
+   Endpoint: /api/inventory/<id>
+
+4. UPDATE INVENTORY ITEM
+   Method: PUT
+   Endpoint: /api/inventory/<id>
+
+5. DELETE INVENTORY ITEM
+   Method: DELETE
+   Endpoint: /api/inventory/<id>
+
+6. RETRIEVE LOW-STOCK ITEMS
+   Method: GET
+   Endpoint: /api/inventory/low-stock
+"""
