@@ -4,7 +4,7 @@ class SupplyHistory(db.Model):
     __tablename__ = "supply_history"
 
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     date_of_order = db.Column(db.Date, nullable=False)

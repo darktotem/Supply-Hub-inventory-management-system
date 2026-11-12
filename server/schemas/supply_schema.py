@@ -50,7 +50,7 @@ class SupplyOrderSchema(Schema):
 class CancelOrderStatusSchema(Schema):
     status = fields.Str(
         required=True,
-        validate=validate.Oneof(['Cancelled'])
+        validate=validate.OneOf(['Cancelled'])
     )
 
 class SupplyHistorySchema(Schema):
