@@ -75,4 +75,36 @@ def get_inventory_item(item_id):
     }), 200
 
 
+    @app.route("/api/inventory/<int:item_id>", methods=["PUT"])
+def update_inventory(item_id):
+    item = db.session.get(Inventory, item_id)
+
+    if not item:
+        return jsonify({"error": "Inventory item not found"}), 404
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    for field in ["product_name", "category", "quantity", "threshold", "price"]:
+        if field in data:
+            if field in ["quantity", "threshold", "price"] and data[field] < 0:
+                return jsonify({"error": "Values cannot be negative"}), 400
+
+            setattr(item, field, data[field])
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Inventory item updated successfully",
+        "id": item.id,
+        "product_name": item.product_name,
+        "category": item.category,
+        "quantity": item.quantity,
+        "threshold": item.threshold,
+        "price": item.price
+    }), 200
+
+
     
