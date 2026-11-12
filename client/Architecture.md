@@ -39,7 +39,7 @@ ROUTES
     2. view supply history
     3. manage invoices
     4. manage payments (mark it as paid)
-    
+  
 
 COMPONENTS
 
@@ -120,4 +120,17 @@ features
     auditor/
       audit_dashboard.jsx
 
+BACK-END
+models
+1. inventory (product details)
+2. employees (users)
+3. suppliers
+4. supply_history
+5. customers (sales)
+6. customer_orders
+7. payment_invoices & history
+8. 
+
+(routes fetch are)
 ```
+
