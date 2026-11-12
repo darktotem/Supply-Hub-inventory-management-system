@@ -1,19 +1,46 @@
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+server/
+├── app.py                  ← entry point (creates app, imports routes last)
+├── config.py
+├── extensions.py           ← db, migrate, bcrypt
+├── schemas.py              ← marshmallow schemas
+├── seed.py                 ← dev data (uses Faker)
+├── Pipfile
+├── Pipfile.lock
+├── migrations/             ← created by flask db init
+├── instance/
+│   └── inventory.db        ← SQLite file, created by flask db upgrade
+├── tests/
+│
+├── models/
+│   ├── __init__.py         ← imports every model
+│   ├── user.py             ← User, Role, ALL_ROLES
+│   ├── product.py
+│   ├── supplier.py         ← Supplier, SupplierProduct
+│   ├── supply_history.py   ← SupplyOrder, SupplyItem
+│   ├── customer.py
+│   ├── customer_history.py ← CustomerOrder, CustomerOrderItem
+│   ├── invoice.py
+│   ├── report.py
+│   └── audit_log.py
+│
+├── routes/
+│   ├── __init__.py         ← empty
+│   ├── auth.py             ← login, change_password, change_username, recover_password
+│   ├── employees.py        ← employees, register_employee, change_details,
+│   │                         reset_password, recovery_code, deny_access,
+│   │                         restore_access, delete_employee
+│   ├── inventory.py        ← inventory (+ ?search=)
+│   ├── supply.py           ← cancel_supply_order (more to come)
+│   ├── warehouse.py        ← stub
+│   ├── sales.py            ← stub
+│   └── finance.py          ← stub
+│
+└── utils/
+    ├── __init__.py         ← empty
+    ├── constants.py        ← SupplyStatus, CustomerOrderStatus, PaymentStatus
+    ├── decorators.py       ← login_required, roles_required, current_user
+    ├── tokens.py           ← create_token, decode_token (PyJWT)
+    ├── validators.py       ← load_json (marshmallow wrapper)
+    ├── audit.py            ← log_action
+    ├── stock.py            ← increase_stock, decrease_stock
+    └── errors.py           ← JSON 404/405/500 handlers
