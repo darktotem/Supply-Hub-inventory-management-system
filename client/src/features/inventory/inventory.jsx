@@ -1,40 +1,32 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-const API_URL = "https://dummyjson.com/products?limit=100";
-const LOW_STOCK_LIMIT = 10;
+const initialForm = {
+  product_name: "",
+  category: "",
+  quantity: "",
+  threshold: "10",
+  price: "",
+};
 
 /**
  * @typedef {Object} Product
- * @property {number|string} id
- * @property {string} title
+ * @property {number} id
+ * @property {string} product_name
  * @property {string} category
- * @property {string} [brand]
+ * @property {number} quantity
+ * @property {number} threshold
  * @property {number} price
- * @property {number} stock
- * @property {string} [sku]
- * @property {string} [thumbnail]
- * @property {number} [rating]
  */
 
 /**
  * @typedef {Object} ProductForm
- * @property {string} title
+ * @property {string} product_name
  * @property {string} category
- * @property {string} brand
+ * @property {string} quantity
+ * @property {string} threshold
  * @property {string} price
- * @property {string} stock
- * @property {string} sku
  */
-
-const initialForm = {
-  title: "",
-  category: "",
-  brand: "",
-  price: "",
-  stock: "",
-  sku: "",
-};
 
 /**
  * @param {number|string} price
@@ -47,53 +39,23 @@ function formatPrice(price) {
 }
 
 function Inventory() {
-  /** @type {Product[]} */
-  const initialProducts = [];
+  const [products, setProducts] = useState(
+    /** @type {Product[]} */ ([])
+  );
 
-  const [products, setProducts] = useState(initialProducts);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
 
   const [showModal, setShowModal] = useState(false);
 
-const [editingProduct, setEditingProduct] = useState(
-  /** @type {Product|null} */ (null)
-);
+  const [editingProduct, setEditingProduct] = useState(
+    /** @type {Product | null} */ (null)
+  );
 
-  /** @type {[ProductForm, (value: ProductForm|((previous: ProductForm) => ProductForm)) => void]} */
-  const [form, setForm] = useState(initialForm);
-
-  // Fetch products from DummyJSON
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await fetch(API_URL);
-
-      if (!response.ok) {
-        throw new Error("Unable to fetch inventory products.");
-      }
-
-      const data = await response.json();
-      setProducts(data.products || []);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const [form, setForm] = useState(
+    /** @type {ProductForm} */ (initialForm)
+  );
 
   // Get unique product categories
   const categories = useMemo(() => {
@@ -105,19 +67,18 @@ const [editingProduct, setEditingProduct] = useState(
   // Search and filter products
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const matchesSearch =
-        product.title.toLowerCase().includes(search.toLowerCase()) ||
-        (product.brand || "").toLowerCase().includes(search.toLowerCase()) ||
-        (product.sku || "").toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = product.product_name
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
       const matchesCategory =
         category === "all" || product.category === category;
 
       const matchesStock =
         stockFilter === "all" ||
-        (stockFilter === "low" && product.stock <= LOW_STOCK_LIMIT) ||
-        (stockFilter === "available" && product.stock > LOW_STOCK_LIMIT) ||
-        (stockFilter === "out" && product.stock === 0);
+        (stockFilter === "available" && product.quantity > product.threshold) ||
+        (stockFilter === "low" && product.quantity <= product.threshold) ||
+        (stockFilter === "out" && product.quantity === 0);
 
       return matchesSearch && matchesCategory && matchesStock;
     });
@@ -127,29 +88,27 @@ const [editingProduct, setEditingProduct] = useState(
   const totalProducts = products.length;
 
   const totalStock = products.reduce(
-    (total, product) => total + Number(product.stock || 0),
+    (total, product) => total + product.quantity,
     0
   );
 
   const lowStockProducts = products.filter(
-    (product) =>
-      product.stock > 0 && product.stock <= LOW_STOCK_LIMIT
+    (product) => product.quantity <= product.threshold
   ).length;
 
   const outOfStockProducts = products.filter(
-    (product) => product.stock === 0
+    (product) => product.quantity === 0
   ).length;
 
   const inventoryValue = products.reduce(
-    (total, product) =>
-      total + Number(product.price || 0) * Number(product.stock || 0),
+    (total, product) => total + product.price * product.quantity,
     0
   );
 
   // Open add product modal
   const openAddModal = () => {
     setEditingProduct(null);
-    setForm(initialForm);
+    setForm({ ...initialForm });
     setShowModal(true);
   };
 
@@ -161,12 +120,11 @@ const [editingProduct, setEditingProduct] = useState(
     setEditingProduct(product);
 
     setForm({
-      title: product.title || "",
-      category: product.category || "",
-      brand: product.brand || "",
-      price: String(product.price ?? ""),
-      stock: String(product.stock ?? ""),
-      sku: product.sku || "",
+      product_name: product.product_name,
+      category: product.category,
+      quantity: String(product.quantity),
+      threshold: String(product.threshold),
+      price: String(product.price),
     });
 
     setShowModal(true);
@@ -174,7 +132,7 @@ const [editingProduct, setEditingProduct] = useState(
 
   // Handle form input
   /**
-   * @param {{ target: { name: string, value: string } }} event
+   * @param {React.ChangeEvent<HTMLInputElement>} event
    */
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -187,28 +145,31 @@ const [editingProduct, setEditingProduct] = useState(
 
   // Add or update product
   /**
-   * @param {{ preventDefault: () => void }} event
+   * @param {React.FormEvent<HTMLFormElement>} event
    */
   const handleSubmit = (event) => {
     event.preventDefault();
 
     const productData = {
-      ...form,
+      product_name: form.product_name.trim(),
+      category: form.category.trim(),
+      quantity: Number(form.quantity),
+      threshold: Number(form.threshold),
       price: Number(form.price),
-      stock: Number(form.stock),
-      thumbnail:
-        editingProduct?.thumbnail ||
-        "https://placehold.co/100x100?text=Product",
     };
 
     if (
-      !productData.title.trim() ||
-      !productData.category.trim() ||
-      !productData.sku.trim() ||
-      Number.isNaN(productData.price) ||
-      productData.price < 0 ||
-      !Number.isInteger(productData.stock) ||
-      productData.stock < 0
+      !productData.product_name ||
+      !productData.category ||
+      form.quantity === "" ||
+      form.threshold === "" ||
+      form.price === "" ||
+      !Number.isInteger(productData.quantity) ||
+      productData.quantity < 0 ||
+      !Number.isInteger(productData.threshold) ||
+      productData.threshold < 0 ||
+      !Number.isFinite(productData.price) ||
+      productData.price < 0
     ) {
       alert("Please enter valid product details.");
       return;
@@ -224,9 +185,8 @@ const [editingProduct, setEditingProduct] = useState(
       );
     } else {
       const newProduct = {
+        id: Date.now(),
         ...productData,
-        id: `local-${Date.now()}`,
-        rating: 0,
       };
 
       setProducts((previous) => [newProduct, ...previous]);
@@ -234,17 +194,17 @@ const [editingProduct, setEditingProduct] = useState(
 
     setShowModal(false);
     setEditingProduct(null);
-    setForm(initialForm);
+    setForm({ ...initialForm });
   };
 
   // Delete product
   /**
-   * @param {number|string} id
-   * @param {string} title
+   * @param {number} id
+   * @param {string} productName
    */
-  const handleDelete = (id, title) => {
+  const handleDelete = (id, productName) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${title}"?`
+      `Are you sure you want to delete "${productName}"?`
     );
 
     if (!confirmed) return;
@@ -256,14 +216,15 @@ const [editingProduct, setEditingProduct] = useState(
 
   // Stock status
   /**
-   * @param {number} stock
+   * @param {number} quantity
+   * @param {number} threshold
    */
-  const getStockStatus = (stock) => {
-    if (stock === 0) {
+  const getStockStatus = (quantity, threshold) => {
+    if (quantity === 0) {
       return { label: "Out of stock", className: "out" };
     }
 
-    if (stock <= LOW_STOCK_LIMIT) {
+    if (quantity <= threshold) {
       return { label: "Low stock", className: "low" };
     }
 
@@ -422,8 +383,7 @@ const [editingProduct, setEditingProduct] = useState(
 
         .sf-inventory .search-box input:focus,
         .sf-inventory .filters select:focus,
-        .sf-inventory .modal-form input:focus,
-        .sf-inventory .modal-form select:focus {
+        .sf-inventory .modal-form input:focus {
           border-color: #16a34a;
           box-shadow: 0 0 0 3px #16a34a18;
         }
@@ -485,33 +445,16 @@ const [editingProduct, setEditingProduct] = useState(
         .sf-inventory .product-info {
           display: flex;
           align-items: center;
-          gap: 11px;
-          min-width: 210px;
-        }
-
-        .sf-inventory .product-info img {
-          width: 42px;
-          height: 42px;
-          object-fit: contain;
-          border: 1px solid #edf0f4;
-          border-radius: 7px;
-          background: white;
+          min-width: 180px;
         }
 
         .sf-inventory .product-info strong {
           display: block;
           color: #263247;
           font-size: 12px;
-          max-width: 180px;
+          max-width: 220px;
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-
-        .sf-inventory .product-info small {
-          color: #98a2b3;
-          display: block;
-          margin-top: 4px;
-          font-size: 10px;
         }
 
         .sf-inventory .stock-number {
@@ -571,7 +514,6 @@ const [editingProduct, setEditingProduct] = useState(
           font-size: 11px;
         }
 
-        .sf-inventory .loading-state,
         .sf-inventory .empty-state {
           text-align: center;
           padding: 55px 20px;
@@ -579,23 +521,8 @@ const [editingProduct, setEditingProduct] = useState(
           font-size: 13px;
         }
 
-        .sf-inventory .error-state {
-          background: #fff1f2;
-          border: 1px solid #fecdd3;
-          color: #be123c;
-          border-radius: 9px;
-          padding: 17px;
-          margin-bottom: 18px;
-          font-size: 13px;
-        }
-
-        .sf-inventory .retry-btn {
-          margin-left: 12px;
-          border: none;
-          color: #be123c;
-          font-weight: 700;
-          background: transparent;
-          cursor: pointer;
+        .sf-inventory .empty-state h3 {
+          color: #263247;
         }
 
         .sf-inventory .modal-backdrop {
@@ -663,8 +590,7 @@ const [editingProduct, setEditingProduct] = useState(
           font-weight: 650;
         }
 
-        .sf-inventory .modal-form input,
-        .sf-inventory .modal-form select {
+        .sf-inventory .modal-form input {
           width: 100%;
           border: 1px solid #dce3eb;
           border-radius: 7px;
@@ -775,7 +701,7 @@ const [editingProduct, setEditingProduct] = useState(
             <span className="stat-icon">⚠️</span>
           </div>
           <h2>{lowStockProducts}</h2>
-          <small>Products with 1–10 units</small>
+          <small>Products at or below their threshold</small>
         </div>
 
         <div className="stat-card">
@@ -787,16 +713,6 @@ const [editingProduct, setEditingProduct] = useState(
           <small>Estimated value at listed prices</small>
         </div>
       </div>
-
-      {/* ERROR MESSAGE */}
-      {error && (
-        <div className="error-state">
-          {error}
-          <button className="retry-btn" onClick={fetchProducts}>
-            Try again
-          </button>
-        </div>
-      )}
 
       {/* INVENTORY TABLE */}
       <div className="inventory-panel">
@@ -813,7 +729,7 @@ const [editingProduct, setEditingProduct] = useState(
             <span className="search-symbol">⌕</span>
             <input
               type="text"
-              placeholder="Search by product, brand or SKU..."
+              placeholder="Search by product name..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -842,14 +758,16 @@ const [editingProduct, setEditingProduct] = useState(
           </select>
         </div>
 
-        {loading ? (
-          <div className="loading-state">
-            Loading inventory products...
-          </div>
-        ) : filteredProducts.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <div className="empty-state">
-            <h3>No products found</h3>
-            <p>Try changing your search or filters.</p>
+            <h3>
+              {products.length === 0 ? "No products yet" : "No products found"}
+            </h3>
+            <p>
+              {products.length === 0
+                ? "Add your first product to get started."
+                : "Try changing your search or filters."}
+            </p>
           </div>
         ) : (
           <div className="table-wrapper">
@@ -857,10 +775,10 @@ const [editingProduct, setEditingProduct] = useState(
               <thead>
                 <tr>
                   <th>PRODUCT</th>
-                  <th>SKU</th>
                   <th>CATEGORY</th>
                   <th>PRICE</th>
-                  <th>STOCK</th>
+                  <th>QUANTITY</th>
+                  <th>THRESHOLD</th>
                   <th>STATUS</th>
                   <th>ACTIONS</th>
                 </tr>
@@ -868,40 +786,31 @@ const [editingProduct, setEditingProduct] = useState(
 
               <tbody>
                 {filteredProducts.map((product) => {
-                  const status = getStockStatus(product.stock);
+                  const status = getStockStatus(
+                    product.quantity,
+                    product.threshold
+                  );
 
                   return (
                     <tr key={product.id}>
                       <td>
                         <div className="product-info">
-                          <img
-                            src={product.thumbnail}
-                            alt={product.title}
-                            onError={(event) => {
-                              event.currentTarget.src =
-                                "https://placehold.co/100x100?text=Product";
-                            }}
-                          />
-                          <div>
-                            <strong title={product.title}>
-                              {product.title}
-                            </strong>
-                            <small>{product.brand || "No brand"}</small>
-                          </div>
+                          <strong title={product.product_name}>
+                            {product.product_name}
+                          </strong>
                         </div>
                       </td>
 
-                      <td>{product.sku || "—"}</td>
-
                       <td>{product.category}</td>
-
                       <td>{formatPrice(product.price)}</td>
 
                       <td>
                         <span className="stock-number">
-                          {product.stock}
+                          {product.quantity}
                         </span>
                       </td>
+
+                      <td>{product.threshold}</td>
 
                       <td>
                         <span className={`status ${status.className}`}>
@@ -921,7 +830,7 @@ const [editingProduct, setEditingProduct] = useState(
                           <button
                             className="action-btn delete"
                             onClick={() =>
-                              handleDelete(product.id, product.title)
+                              handleDelete(product.id, product.product_name)
                             }
                           >
                             Delete
@@ -938,6 +847,8 @@ const [editingProduct, setEditingProduct] = useState(
 
         <div className="table-footer">
           Showing {filteredProducts.length} of {totalProducts} products
+          {" · "}
+          {outOfStockProducts} out of stock
         </div>
       </div>
 
@@ -970,32 +881,24 @@ const [editingProduct, setEditingProduct] = useState(
               <div className="form-field full">
                 <label>Product Name *</label>
                 <input
-                  name="title"
-                  value={form.title}
+                  name="product_name"
+                  value={form.product_name}
                   onChange={handleChange}
                   placeholder="Enter product name"
+                  maxLength={150}
                   required
                 />
               </div>
 
-              <div className="form-field">
+              <div className="form-field full">
                 <label>Category *</label>
                 <input
                   name="category"
                   value={form.category}
                   onChange={handleChange}
                   placeholder="e.g. Electronics"
+                  maxLength={100}
                   required
-                />
-              </div>
-
-              <div className="form-field">
-                <label>Brand</label>
-                <input
-                  name="brand"
-                  value={form.brand}
-                  onChange={handleChange}
-                  placeholder="Enter brand"
                 />
               </div>
 
@@ -1016,8 +919,8 @@ const [editingProduct, setEditingProduct] = useState(
                 <label>Stock Quantity *</label>
                 <input
                   type="number"
-                  name="stock"
-                  value={form.stock}
+                  name="quantity"
+                  value={form.quantity}
                   onChange={handleChange}
                   min="0"
                   step="1"
@@ -1026,12 +929,14 @@ const [editingProduct, setEditingProduct] = useState(
               </div>
 
               <div className="form-field full">
-                <label>SKU *</label>
+                <label>Low Stock Threshold *</label>
                 <input
-                  name="sku"
-                  value={form.sku}
+                  type="number"
+                  name="threshold"
+                  value={form.threshold}
                   onChange={handleChange}
-                  placeholder="e.g. SF-PROD-001"
+                  min="0"
+                  step="1"
                   required
                 />
               </div>
