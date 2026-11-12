@@ -34,3 +34,9 @@ import controllers.inventory   # noqa: E402,F401
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+#report controller blue print
+
+from controllers.report_controller import reports_bp
+app.register_blueprint(reports_bp)
