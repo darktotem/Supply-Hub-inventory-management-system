@@ -44,3 +44,30 @@ def get_inventory_item(item_id):
 
     return inventory_schema.dump(item), 200
 
+
+@app.put("/api/inventory/<int:item_id>")
+def update_inventory(item_id):
+    item = db.session.get(Inventory, item_id)
+
+    if not item:
+        return {"error": "Inventory item not found"}, 404
+
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return {"error": "Request body is required"}, 400
+
+    try:
+        validated_data = inventory_schema.load(data, partial=True)
+    except ValidationError as err:
+        return {"errors": err.messages}, 400
+
+    for field, value in validated_data.items():
+        setattr(item, field, value)
+
+    db.session.commit()
+
+    return inventory_schema.dump(item), 200
+
+
+
