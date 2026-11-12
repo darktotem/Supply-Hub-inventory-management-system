@@ -28,3 +28,12 @@ class InventorySchema(Schema):
         required=True,
         validate=validate.Range(min=0)
     )
+
+class InventorySearchSchema(Schema):
+    product_name = fields.Str(
+        required=True,
+        validate=validate.Length(min=1)
+    )    
+
+inventory_schema = InventorySchema()
+search_schema = InventorySearchSchema()    
