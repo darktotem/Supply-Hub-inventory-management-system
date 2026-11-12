@@ -35,4 +35,12 @@ def get_inventory():
     return inventory_schema.dump(inventory, many=True), 200
 
 
+@app.get("/api/inventory/<int:item_id>")
+def get_inventory_item(item_id):
+    item = db.session.get(Inventory, item_id)
+
+    if not item:
+        return {"error": "Inventory item not found"}, 404
+
+    return inventory_schema.dump(item), 200
 
