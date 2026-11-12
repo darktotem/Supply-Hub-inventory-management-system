@@ -107,4 +107,16 @@ def update_inventory(item_id):
     }), 200
 
 
+    @app.route("/api/inventory/<int:item_id>", methods=["DELETE"])
+def delete_inventory(item_id):
+    item = db.session.get(Inventory, item_id)
+
+    if not item:
+        return jsonify({"error": "Inventory item not found"}), 404
+
+    db.session.delete(item)
+    db.session.commit()
+
+    return jsonify({"message": "Inventory item deleted successfully"}), 200
+
     
