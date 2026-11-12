@@ -80,3 +80,11 @@ def delete_inventory(item_id):
     db.session.commit()
 
     return {"message": "Inventory item deleted successfully"}, 200    
+
+@app.get("/api/inventory/low-stock")
+def get_low_stock():
+    inventory = Inventory.query.filter(
+        Inventory.quantity <= Inventory.threshold
+    ).all()
+
+    return inventory_schema.dump(inventory, many=True), 200    
