@@ -31,6 +31,9 @@ import models  # noqa: E402,F401  (so migrations see all models)
 
 # Controller files go LAST. Each one does `from app import app`.
 import controllers.inventory   # noqa: E402,F401
+from controllers.auth import auth_bp  # noqa: E402
+
+app.register_blueprint(auth_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
