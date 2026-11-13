@@ -1,3 +1,4 @@
+```
 server/
 ├── app.py                  ← entry point (creates app, imports routes last)
 ├── config.py
@@ -44,3 +45,4 @@ server/
     ├── audit.py            ← log_action
     ├── stock.py            ← increase_stock, decrease_stock
     └── errors.py           ← JSON 404/405/500 handlers
+```
