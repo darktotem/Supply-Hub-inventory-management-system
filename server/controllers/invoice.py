@@ -39,7 +39,7 @@ def create_invoice():
             return jsonify({"error": "Product not found"}), 404
 
         invoice = Invoice(
-            unit_price=data["unit_price"],  # or product.price
+            unit_price=data["unit_price"],  
             quantity=data["quantity"],
             customer_id=customer.id,
             product_id=product.id,
