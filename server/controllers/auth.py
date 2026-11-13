@@ -2,7 +2,6 @@ from flask import Blueprint
 import jwt
 from extensions import db
 from models.user import User
-from models.audit_log import AuditLog
 from schemas.auth_schema import (LoginSchema, ChangePasswordSchema, ChangeUsernameSchema, VerifyRecoveryCodeSchema, SetNewPasswordSchema )
 
 from utils.audit import log_action
@@ -117,6 +116,6 @@ def set_new_password():
     user.set_password(data["new_password"])
     user.must_change_password = False
     user.clear_recovery_code()
-    log_action("recover_password", "user", user.id)
+    log_action("recover_password", "user", user.id, actor_id=user.id)
     db.session.commit()
     return {"message": "Password updated. You can now log in."}
