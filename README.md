@@ -23,7 +23,7 @@ server/
 │   ├── report.py
 │   └── audit_log.py
 │
-├── routes/
+├── controllers/
 │   ├── __init__.py         ← empty
 │   ├── auth.py             ← login, change_password, change_username, recover_password
 │   ├── employees.py        ← employees, register_employee, change_details,
