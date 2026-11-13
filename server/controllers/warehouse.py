@@ -6,6 +6,10 @@ from marshmallow import ValidationError
 from extensions import db
 from models.inventory import Inventory
 from models.supply_history import SupplyHistory
+from schemas.warehouse_schema import (
+    warehouse_product_schema,
+    warehouse_product_update_schema,
+)
 
 warehouse_bp = Blueprint("warehouse", __name__)
 
@@ -34,29 +38,12 @@ def warehouse_products():
     if data is None:
         return jsonify({"error": "Request body is required"}), 400
 
-    product_name = str(data.get("product_name") or data.get("name") or "").strip()
-    category = str(data.get("category") or "").strip()
-
-    if not product_name or not category:
-        return jsonify({"error": "product_name and category are required"}), 400
-
     try:
-        quantity = int(data.get("quantity", 0))
-        threshold = int(data.get("threshold", 0))
-        price = float(data.get("price", 0))
-    except (TypeError, ValueError):
-        return jsonify({"error": "quantity, threshold and price must be numeric"}), 400
+        validated_data = warehouse_product_schema.load(data)
+    except ValidationError as err:
+        return jsonify({"errors": err.messages}), 400
 
-    if quantity < 0 or threshold < 0 or price < 0:
-        return jsonify({"error": "quantity, threshold and price cannot be negative"}), 400
-
-    item = Inventory(
-        product_name=product_name,
-        category=category,
-        quantity=quantity,
-        threshold=threshold,
-        price=price,
-    )
+    item = Inventory(**validated_data)
 
     db.session.add(item)
     db.session.commit()
@@ -77,28 +64,13 @@ def update_warehouse_product(item_id):
     if data is None:
         return jsonify({"error": "Request body is required"}), 400
 
-    for field in ["product_name", "category"]:
-        value = data.get(field)
-        if value is not None:
-            if field in ["product_name", "category"] and str(value).strip() == "":
-                return jsonify({"error": f"{field} cannot be empty"}), 400
-            setattr(item, field, value)
+    try:
+        validated_data = warehouse_product_update_schema.load(data, partial=True)
+    except ValidationError as err:
+        return jsonify({"errors": err.messages}), 400
 
-    for field in ["quantity", "threshold", "price"]:
-        if field in data:
-            value = data[field]
-            try:
-                if field in ["quantity", "threshold"]:
-                    value = int(value)
-                else:
-                    value = float(value)
-            except (TypeError, ValueError):
-                return jsonify({"error": f"{field} must be numeric"}), 400
-
-            if value < 0:
-                return jsonify({"error": f"{field} cannot be negative"}), 400
-
-            setattr(item, field, value)
+    for field, value in validated_data.items():
+        setattr(item, field, value)
 
     db.session.commit()
     return jsonify(_inventory_to_dict(item)), 200
