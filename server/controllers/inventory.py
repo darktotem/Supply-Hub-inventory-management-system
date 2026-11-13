@@ -1,14 +1,16 @@
-from flask import request
+
+from flask import Blueprint, request
 from marshmallow import ValidationError
-from app import app
+
 from extensions import db
 from models.inventory import Inventory
 from schemas.inventory_schema import inventory_schema, search_schema
 
 
+inventory_bp = Blueprint("inventory", __name__, url_prefix="/api")
 
 
-@app.post("/api/inventory")
+@inventory_bp.post("/inventory")
 def create_inventory():
     data = request.get_json(silent=True)
 
@@ -27,14 +29,15 @@ def create_inventory():
 
     return inventory_schema.dump(item), 201
 
-@app.get("/api/inventory")
+
+@inventory_bp.get("/inventory")
 def get_inventory():
     inventory = Inventory.query.all()
 
     return inventory_schema.dump(inventory, many=True), 200
 
 
-@app.get("/api/inventory/<int:item_id>")
+@inventory_bp.get("/inventory/<int:item_id>")
 def get_inventory_item(item_id):
     item = db.session.get(Inventory, item_id)
 
@@ -44,7 +47,7 @@ def get_inventory_item(item_id):
     return inventory_schema.dump(item), 200
 
 
-@app.put("/api/inventory/<int:item_id>")
+@inventory_bp.put("/inventory/<int:item_id>")
 def update_inventory(item_id):
     item = db.session.get(Inventory, item_id)
 
@@ -68,7 +71,8 @@ def update_inventory(item_id):
 
     return inventory_schema.dump(item), 200
 
-@app.delete("/api/inventory/<int:item_id>")
+
+@inventory_bp.delete("/inventory/<int:item_id>")
 def delete_inventory(item_id):
     item = db.session.get(Inventory, item_id)
 
@@ -78,18 +82,19 @@ def delete_inventory(item_id):
     db.session.delete(item)
     db.session.commit()
 
-    return {"message": "Inventory item deleted successfully"}, 200    
+    return {"message": "Inventory item deleted successfully"}, 200
 
-@app.get("/api/inventory/low-stock")
+
+@inventory_bp.get("/inventory/low-stock")
 def get_low_stock():
     inventory = Inventory.query.filter(
         Inventory.quantity <= Inventory.threshold
     ).all()
 
-    return inventory_schema.dump(inventory, many=True), 200    
+    return inventory_schema.dump(inventory, many=True), 200
 
 
-@app.post("/api/search")
+@inventory_bp.post("/search")
 def search_inventory():
     data = request.get_json(silent=True)
 
