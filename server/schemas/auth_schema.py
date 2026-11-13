@@ -52,7 +52,7 @@ def role_field(**kwargs):
 #input schemas: authentication (any employee) 
 
 class LoginSchema(BaseSchema):
-    username = fields.String(required=True)
+    username = Username(required=True)
     password = fields.String(required=True)
 
 
@@ -67,7 +67,7 @@ class ChangeUsernameSchema(BaseSchema):
 
 
 class VerifyRecoveryCodeSchema(BaseSchema):
-    username = fields.String(required=True)
+    username = Username(required=True)
     recovery_code = fields.String(required=True)
 
 

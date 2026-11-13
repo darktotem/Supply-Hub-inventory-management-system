@@ -1,24 +1,24 @@
+from flask import Blueprint
 import jwt
-from app import app
 from extensions import db
-from server import app
 from models.user import User
 from models.audit_log import AuditLog
-from schemas import (LoginSchema, ChangePasswordSchema, ChangeUsernameSchema,
-                     VerifyRecoveryCodeSchema, SetNewPasswordSchema)
+from schemas.auth_schema import (LoginSchema, ChangePasswordSchema, ChangeUsernameSchema, VerifyRecoveryCodeSchema, SetNewPasswordSchema )
+
 from utils.audit import log_action
 from utils.decorators import login_required, current_user
 from utils.tokens import create_token, create_reset_token, decode_reset_token
 from utils.validators import load_json
 
+auth_bp = Blueprint("auth", __name__)
 
-@app.post("/api/login")
+@auth_bp.post("/api/login")
 def login():
     data, err = load_json(LoginSchema)
     if err:
         return err
 
-    user = User.query.filter_by(username=data["username"].strip().lower()).first()
+    user = User.query.filter_by(username=data["username"]).first()
     if not user or not user.check_password(data["password"]):
         return {"error": "Invalid username or password"}, 401
     if not user.is_active:
@@ -27,7 +27,7 @@ def login():
     return {"token": create_token(user), "user": user.to_dict()}
 
 
-@app.patch("/api/change_password")
+@auth_bp.patch("/api/change_password")
 @login_required
 def change_password():
     data, err = load_json(ChangePasswordSchema)
@@ -48,7 +48,7 @@ def change_password():
     return {"message": "Password updated"}
 
 
-@app.patch("/api/change_username")
+@auth_bp.patch("/api/change_username")
 @login_required
 def change_username():
     data, err = load_json(ChangeUsernameSchema)
@@ -70,7 +70,7 @@ def change_username():
     return {"user": user.to_dict()}
 
 
-@app.post("/api/verify_recovery_code")
+@auth_bp.post("/api/verify_recovery_code")
 def verify_recovery_code():
     """Public. Step 2 of forgot-password: check the code IT gave the employee."""
     data, err = load_json(VerifyRecoveryCodeSchema)
@@ -78,7 +78,7 @@ def verify_recovery_code():
         return err
 
     generic = {"error": "Invalid or expired recovery code"}
-    user = User.query.filter_by(username=data["username"].strip().lower()).first()
+    user = User.query.filter_by(username=data["username"]).first()
     if not user or not user.is_active:
         return generic, 400
 
@@ -91,7 +91,7 @@ def verify_recovery_code():
     return {"reset_token": create_reset_token(user), "expires_in_minutes": 10}
 
 
-@app.post("/api/set_new_password")
+@auth_bp.post("/api/set_new_password")
 def set_new_password():
     """Public. Step 3: the employee creates and confirms their own password."""
     data, err = load_json(SetNewPasswordSchema)
@@ -117,7 +117,6 @@ def set_new_password():
     user.set_password(data["new_password"])
     user.must_change_password = False
     user.clear_recovery_code()
-    db.session.add(AuditLog(user_id=user.id, action="recover_password",
-                            entity="user", entity_id=user.id))
+    log_action("recover_password", "user", user.id)
     db.session.commit()
     return {"message": "Password updated. You can now log in."}
