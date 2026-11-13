@@ -81,3 +81,43 @@ def test_mark_delivery_updates_stock_and_status():
 
         db.session.remove()
         db.drop_all()
+
+
+def test_inventory_report_can_be_saved_and_listed():
+    app.config.update(
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+    )
+
+    with app.app_context():
+        db.create_all()
+        db.session.add(
+            Inventory(
+                product_name="Flour",
+                category="Food",
+                quantity=3,
+                threshold=5,
+                price=100,
+            )
+        )
+        db.session.commit()
+
+        with app.test_client() as client:
+            live_response = client.get("/warehouse/reports")
+            assert live_response.status_code == 200
+            assert live_response.json["total_products"] == 1
+            assert live_response.json["low_stock_count"] == 1
+            assert live_response.json["generated_at"] is not None
+
+            saved_response = client.post("/warehouse/reports")
+            assert saved_response.status_code == 201
+            assert saved_response.json["id"] is not None
+            assert saved_response.json["low_stock_items"][0]["product_name"] == "Flour"
+
+            history_response = client.get("/warehouse/reports/history")
+            assert history_response.status_code == 200
+            assert len(history_response.json) == 1
+            assert history_response.json[0]["id"] == saved_response.json["id"]
+
+        db.session.remove()
+        db.drop_all()

@@ -5,7 +5,12 @@ from marshmallow import ValidationError
 
 from extensions import db
 from models.inventory import Inventory
+from models.report import Report
 from models.supply_history import SupplyHistory
+from schemas.warehouse_schema import (
+    warehouse_product_schema,
+    warehouse_product_update_schema,
+)
 
 warehouse_bp = Blueprint("warehouse", __name__)
 
@@ -34,29 +39,12 @@ def warehouse_products():
     if data is None:
         return jsonify({"error": "Request body is required"}), 400
 
-    product_name = str(data.get("product_name") or data.get("name") or "").strip()
-    category = str(data.get("category") or "").strip()
-
-    if not product_name or not category:
-        return jsonify({"error": "product_name and category are required"}), 400
-
     try:
-        quantity = int(data.get("quantity", 0))
-        threshold = int(data.get("threshold", 0))
-        price = float(data.get("price", 0))
-    except (TypeError, ValueError):
-        return jsonify({"error": "quantity, threshold and price must be numeric"}), 400
+        validated_data = warehouse_product_schema.load(data)
+    except ValidationError as err:
+        return jsonify({"errors": err.messages}), 400
 
-    if quantity < 0 or threshold < 0 or price < 0:
-        return jsonify({"error": "quantity, threshold and price cannot be negative"}), 400
-
-    item = Inventory(
-        product_name=product_name,
-        category=category,
-        quantity=quantity,
-        threshold=threshold,
-        price=price,
-    )
+    item = Inventory(**validated_data)
 
     db.session.add(item)
     db.session.commit()
@@ -77,28 +65,13 @@ def update_warehouse_product(item_id):
     if data is None:
         return jsonify({"error": "Request body is required"}), 400
 
-    for field in ["product_name", "category"]:
-        value = data.get(field)
-        if value is not None:
-            if field in ["product_name", "category"] and str(value).strip() == "":
-                return jsonify({"error": f"{field} cannot be empty"}), 400
-            setattr(item, field, value)
+    try:
+        validated_data = warehouse_product_update_schema.load(data, partial=True)
+    except ValidationError as err:
+        return jsonify({"errors": err.messages}), 400
 
-    for field in ["quantity", "threshold", "price"]:
-        if field in data:
-            value = data[field]
-            try:
-                if field in ["quantity", "threshold"]:
-                    value = int(value)
-                else:
-                    value = float(value)
-            except (TypeError, ValueError):
-                return jsonify({"error": f"{field} must be numeric"}), 400
-
-            if value < 0:
-                return jsonify({"error": f"{field} cannot be negative"}), 400
-
-            setattr(item, field, value)
+    for field, value in validated_data.items():
+        setattr(item, field, value)
 
     db.session.commit()
     return jsonify(_inventory_to_dict(item)), 200
@@ -146,15 +119,25 @@ def mark_delivery(order_id):
 @warehouse_bp.route("/reports", methods=["GET"])
 @warehouse_bp.route("/api/reports", methods=["GET"])
 def warehouse_reports():
-    inventory = Inventory.query.order_by(Inventory.product_name.asc()).all()
-    low_stock_items = [
-        _inventory_to_dict(item) for item in inventory if item.quantity <= item.threshold
-    ]
+    report = Report.create_inventory_report()
+    return jsonify(report.to_dict()), 200
 
-    return jsonify({
-        "total_products": len(inventory),
-        "total_quantity": sum(item.quantity for item in inventory),
-        "low_stock_count": len(low_stock_items),
-        "low_stock_items": low_stock_items,
-        "inventory": [_inventory_to_dict(item) for item in inventory],
-    }), 200
+
+@warehouse_bp.route("/warehouse/reports", methods=["POST"])
+@warehouse_bp.route("/api/warehouse/reports", methods=["POST"])
+@warehouse_bp.route("/reports", methods=["POST"])
+@warehouse_bp.route("/api/reports", methods=["POST"])
+def save_warehouse_report():
+    report = Report.create_inventory_report()
+    db.session.add(report)
+    db.session.commit()
+    return jsonify(report.to_dict()), 201
+
+
+@warehouse_bp.route("/warehouse/reports/history", methods=["GET"])
+@warehouse_bp.route("/api/warehouse/reports/history", methods=["GET"])
+@warehouse_bp.route("/reports/history", methods=["GET"])
+@warehouse_bp.route("/api/reports/history", methods=["GET"])
+def warehouse_report_history():
+    reports = Report.query.order_by(Report.generated_at.desc(), Report.id.desc()).all()
+    return jsonify([report.to_dict() for report in reports]), 200
