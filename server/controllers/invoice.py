@@ -7,7 +7,7 @@ from extensions import db
 
 from models.invoice import Invoice
 from models.customer import Customer
-from models.product import Product
+from models.inventory import Inventory
 
 from schemas.invoice_schema import invoice_schema, invoices_schema
 

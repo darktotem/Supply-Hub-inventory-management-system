@@ -11,11 +11,6 @@ sales_bp = Blueprint("sales", __name__)
 customer_schema = CustomerSchema()
 order_schema = OrderSchema()
 
-# TODO (Phase 3): the sales officer and the operations director can use every route.
-# The finance officer and the auditor only need GET /api/customer_history.
-
-
-# ---------- Customers ----------
 
 @sales_bp.get("/api/customers")
 def get_customers():
@@ -54,7 +49,6 @@ def delete_customer(id):
     return jsonify({"message": "Customer deleted"}), 200
 
 
-# ---------- Customer orders ----------
 
 @sales_bp.get("/api/customer_orders")
 def get_customer_orders():
@@ -64,7 +58,6 @@ def get_customer_orders():
 
 @sales_bp.get("/api/customer_history")
 def get_customer_history():
-    # History = orders that are finished (fulfilled or cancelled), newest first
     history = (
         CustomerHistory.query
         .filter(CustomerHistory.status != "pending")
