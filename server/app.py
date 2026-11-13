@@ -23,8 +23,6 @@ def add_cors_headers(response):
         response.headers["Vary"] = "Origin"
     return response
 
-
-
 from controllers.auth import auth_bp  
 from controllers.supply import supply_bp  
 from controllers.invoice import invoice_bp
