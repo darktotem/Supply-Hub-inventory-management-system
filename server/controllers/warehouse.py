@@ -5,6 +5,7 @@ from marshmallow import ValidationError
 
 from extensions import db
 from models.inventory import Inventory
+from models.report import Report
 from models.supply_history import SupplyHistory
 from schemas.warehouse_schema import (
     warehouse_product_schema,
@@ -118,15 +119,25 @@ def mark_delivery(order_id):
 @warehouse_bp.route("/reports", methods=["GET"])
 @warehouse_bp.route("/api/reports", methods=["GET"])
 def warehouse_reports():
-    inventory = Inventory.query.order_by(Inventory.product_name.asc()).all()
-    low_stock_items = [
-        _inventory_to_dict(item) for item in inventory if item.quantity <= item.threshold
-    ]
+    report = Report.create_inventory_report()
+    return jsonify(report.to_dict()), 200
 
-    return jsonify({
-        "total_products": len(inventory),
-        "total_quantity": sum(item.quantity for item in inventory),
-        "low_stock_count": len(low_stock_items),
-        "low_stock_items": low_stock_items,
-        "inventory": [_inventory_to_dict(item) for item in inventory],
-    }), 200
+
+@warehouse_bp.route("/warehouse/reports", methods=["POST"])
+@warehouse_bp.route("/api/warehouse/reports", methods=["POST"])
+@warehouse_bp.route("/reports", methods=["POST"])
+@warehouse_bp.route("/api/reports", methods=["POST"])
+def save_warehouse_report():
+    report = Report.create_inventory_report()
+    db.session.add(report)
+    db.session.commit()
+    return jsonify(report.to_dict()), 201
+
+
+@warehouse_bp.route("/warehouse/reports/history", methods=["GET"])
+@warehouse_bp.route("/api/warehouse/reports/history", methods=["GET"])
+@warehouse_bp.route("/reports/history", methods=["GET"])
+@warehouse_bp.route("/api/reports/history", methods=["GET"])
+def warehouse_report_history():
+    reports = Report.query.order_by(Report.generated_at.desc(), Report.id.desc()).all()
+    return jsonify([report.to_dict() for report in reports]), 200
