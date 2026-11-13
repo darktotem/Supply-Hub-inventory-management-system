@@ -14,7 +14,6 @@ from schemas.supply_schema import (
 
 supply_bp = Blueprint("supply", __name__)
 
-#View all supply history
 @supply_bp.route("/supplyhistory", methods=["GET"])
 def get_supply_history():
     supply_history = SupplyHistory.query.all()

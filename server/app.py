@@ -1,6 +1,7 @@
 from flask import Flask, request
 from config import Config
 from extensions import db, migrate, bcrypt
+from models import Inventory, Invoice, Supplier, SupplyHistory, AuditLog, Customer, CustomerHistory, User
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -23,21 +24,19 @@ def add_cors_headers(response):
     return response
 
 
-import models  # noqa: E402,F401  (so migrations see all models)
 
+from controllers.auth import auth_bp  
+from controllers.supply import supply_bp  
+from controllers.invoice import invoice_bp
+from controllers.sales import sales_bp
+from controllers.warehouse import warehouse_bp
 
-# from utils.errors import register_error_handlers  # noqa: E402
-# register_error_handlers(app)
-
-# Controller files go LAST. Each one does `from app import app`.
-import controllers.inventory   # noqa: E402,F401
-import controllers.warehouse  # noqa: E402,F401
-from controllers.auth import auth_bp  # noqa: E402
-from controllers.supply import supply_bp  # noqa: E402
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(supply_bp)
-app.register_blueprint(controllers.warehouse.warehouse_bp)
+app.register_blueprint(invoice_bp)
+app.register_blueprint(sales_bp)
+app.register_blueprint(warehouse_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)

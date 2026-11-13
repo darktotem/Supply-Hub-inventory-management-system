@@ -6,8 +6,6 @@ from models.inventory import Inventory
 from schemas.inventory_schema import inventory_schema, search_schema
 
 
-
-
 @app.post("/api/inventory")
 def create_inventory():
     data = request.get_json(silent=True)
