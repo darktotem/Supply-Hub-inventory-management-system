@@ -19,7 +19,7 @@ class Invoice(db.Model):
     unit_price = db.Column(db.Numeric(10, 2), nullable=False)
 
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
 
     customer = db.relationship("Customer", back_populates="invoices")
     product = db.relationship("Product", back_populates="invoices")
