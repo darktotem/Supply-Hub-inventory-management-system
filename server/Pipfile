@@ -16,6 +16,7 @@ importlib-resources = "*"
 flask-bcrypt = "*"
 PyJWT = "*"
 email-validator = "*"
+pytest = "*"
 
 [dev-packages]
 pytest = "*"

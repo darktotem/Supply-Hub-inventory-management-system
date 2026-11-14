@@ -1,7 +1,17 @@
 from flask import Flask, request
 from config import Config
 from extensions import db, migrate, bcrypt
+
+# Import Models
 from models import Inventory, Invoice, Supplier, SupplyHistory, AuditLog, Customer, CustomerHistory, User
+
+# Import decorators
+from controllers.auth import auth_bp  
+from controllers.supply import supply_bp  
+from controllers.invoice import invoice_bp
+from controllers.sales import sales_bp
+from controllers.warehouse import warehouse_bp
+from controllers.inventory import inventory_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -23,15 +33,8 @@ def add_cors_headers(response):
         response.headers["Vary"] = "Origin"
     return response
 
-
-
-from controllers.auth import auth_bp  
-from controllers.supply import supply_bp  
-from controllers.invoice import invoice_bp
-from controllers.sales import sales_bp
-from controllers.warehouse import warehouse_bp
-
-
+# Register decorators
+app.register_blueprint(inventory_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(supply_bp)
 app.register_blueprint(invoice_bp)
