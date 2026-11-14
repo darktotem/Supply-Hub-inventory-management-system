@@ -257,6 +257,55 @@ def test_cancel_supply_order(client):
     assert supply.status == "Cancelled"
 
 
+def test_cancel_supply_order_twice_is_blocked(client):
+    supplier = Supplier(
+        name="Fresh Suppliers",
+        contact_person="Mary",
+        phone="0723456789",
+        email="fresh@gmail.com",
+        address="Nairobi"
+    )
+
+    product = Inventory(
+        product_name="Rice",
+        category="Food",
+        quantity=40,
+        threshold=10,
+        price=200
+    )
+
+    db.session.add(supplier)
+    db.session.add(product)
+    db.session.commit()
+
+    supply = SupplyHistory(
+        product_id=product.id,
+        supplier_id=supplier.id,
+        quantity=10,
+        date_of_order=date(2026, 11, 12)
+    )
+
+    db.session.add(supply)
+    db.session.commit()
+
+    first_response = client.patch(
+        f"/cancel_order/{supply.id}",
+        json={"status": "Cancelled"}
+    )
+
+    second_response = client.patch(
+        f"/cancel_order/{supply.id}",
+        json={"status": "Cancelled"}
+    )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 400
+    assert second_response.json["error"] == "This order cannot be cancelled"
+
+    db.session.refresh(supply)
+    assert supply.status == "Cancelled"
+
+
 def test_register_duplicate_supplier(client):
     supplier_data = {
         "name": "ABC Suppliers",
