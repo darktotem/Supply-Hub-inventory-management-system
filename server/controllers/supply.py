@@ -127,10 +127,10 @@ def cancel_order(order_id):
     if supply_order is None:
         return jsonify({"error": "Supply order not found"}), 404
 
-    if supply_order.status in ["Delivered", "Cancelled"]:
+    if supply_order.status != "Pending":
         return jsonify({"error": "This order cannot be cancelled"}), 400
 
-    supply_order.status = validated_data["status"]
+    supply_order.status = "Cancelled"
     db.session.commit()
 
     return jsonify({"message": "Supply order cancelled successfully"}), 200
