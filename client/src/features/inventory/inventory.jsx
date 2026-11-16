@@ -34,7 +34,7 @@ const initialForm = {
 function formatPrice(price) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "KSH",
+    currency: "USD",
   }).format(Number(price || 0));
 }
 
@@ -903,7 +903,7 @@ function Inventory() {
               </div>
 
               <div className="form-field">
-                <label>Price (KSH) *</label>
+                <label>Price (USD) *</label>
                 <input
                   type="number"
                   name="price"
