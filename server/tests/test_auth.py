@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import jwt
 from extensions import db
-from models.audit_log import AuditLog
+from models.audit import AuditLog
 from utils.tokens import create_reset_token
 
 

@@ -7,10 +7,12 @@ from extensions import db
 from models.inventory import Inventory
 from models.report import Report
 from models.supply_history import SupplyHistory
+from models.user import Role
 from schemas.warehouse_schema import (
     warehouse_product_schema,
     warehouse_product_update_schema,
 )
+from utils.decorators import current_user, login_required, roles_required
 
 warehouse_bp = Blueprint("warehouse", __name__)
 
@@ -30,10 +32,15 @@ def _inventory_to_dict(item):
 @warehouse_bp.route("/api/warehouse/products", methods=["GET", "POST"])
 @warehouse_bp.route("/products", methods=["GET", "POST"])
 @warehouse_bp.route("/api/products", methods=["GET", "POST"])
+@login_required
 def warehouse_products():
     if request.method == "GET":
         products = Inventory.query.order_by(Inventory.product_name.asc()).all()
         return jsonify([_inventory_to_dict(item) for item in products]), 200
+
+    user = current_user()
+    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
+        return {"error": "You do not have permission to access this resource"}, 403
 
     data = request.get_json(silent=True)
     if data is None:
@@ -56,7 +63,12 @@ def warehouse_products():
 @warehouse_bp.route("/api/warehouse/products/<int:item_id>", methods=["PATCH"])
 @warehouse_bp.route("/products/<int:item_id>", methods=["PATCH"])
 @warehouse_bp.route("/api/products/<int:item_id>", methods=["PATCH"])
+@login_required
 def update_warehouse_product(item_id):
+    user = current_user()
+    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
+        return {"error": "You do not have permission to access this resource"}, 403
+
     item = db.session.get(Inventory, item_id)
     if item is None:
         return jsonify({"error": "Inventory item not found"}), 404
@@ -81,6 +93,7 @@ def update_warehouse_product(item_id):
 @warehouse_bp.route("/api/warehouse/deliveries", methods=["GET"])
 @warehouse_bp.route("/deliveries", methods=["GET"])
 @warehouse_bp.route("/api/deliveries", methods=["GET"])
+@login_required
 def warehouse_deliveries():
     orders = SupplyHistory.query.order_by(SupplyHistory.date_of_order.desc()).all()
     return jsonify([order.to_dict() for order in orders]), 200
@@ -90,7 +103,12 @@ def warehouse_deliveries():
 @warehouse_bp.route("/api/warehouse/deliveries/<int:order_id>/deliver", methods=["PATCH", "POST"])
 @warehouse_bp.route("/deliveries/<int:order_id>/deliver", methods=["PATCH", "POST"])
 @warehouse_bp.route("/api/deliveries/<int:order_id>/deliver", methods=["PATCH", "POST"])
+@login_required
 def mark_delivery(order_id):
+    user = current_user()
+    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
+        return {"error": "You do not have permission to access this resource"}, 403
+
     order = db.session.get(SupplyHistory, order_id)
     if order is None:
         return jsonify({"error": "Supply order not found"}), 404
@@ -118,6 +136,7 @@ def mark_delivery(order_id):
 @warehouse_bp.route("/api/warehouse/reports", methods=["GET"])
 @warehouse_bp.route("/reports", methods=["GET"])
 @warehouse_bp.route("/api/reports", methods=["GET"])
+@login_required
 def warehouse_reports():
     report = Report.create_inventory_report()
     return jsonify(report.to_dict()), 200
@@ -127,7 +146,12 @@ def warehouse_reports():
 @warehouse_bp.route("/api/warehouse/reports", methods=["POST"])
 @warehouse_bp.route("/reports", methods=["POST"])
 @warehouse_bp.route("/api/reports", methods=["POST"])
+@login_required
 def save_warehouse_report():
+    user = current_user()
+    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
+        return {"error": "You do not have permission to access this resource"}, 403
+
     report = Report.create_inventory_report()
     db.session.add(report)
     db.session.commit()
@@ -138,6 +162,7 @@ def save_warehouse_report():
 @warehouse_bp.route("/api/warehouse/reports/history", methods=["GET"])
 @warehouse_bp.route("/reports/history", methods=["GET"])
 @warehouse_bp.route("/api/reports/history", methods=["GET"])
+@login_required
 def warehouse_report_history():
     reports = Report.query.order_by(Report.generated_at.desc(), Report.id.desc()).all()
     return jsonify([report.to_dict() for report in reports]), 200

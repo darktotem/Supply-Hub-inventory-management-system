@@ -4,7 +4,9 @@ from extensions import db
 from models.customer import Customer
 from models.customer_history import CustomerHistory
 from models.inventory import Inventory
+from models.user import Role
 from schemas.sales_schema import CustomerSchema, OrderSchema
+from utils.decorators import login_required, roles_required
 
 sales_bp = Blueprint("sales", __name__)
 
@@ -13,12 +15,15 @@ order_schema = OrderSchema()
 
 
 @sales_bp.get("/api/customers")
+@login_required
 def get_customers():
     customers = Customer.query.all()
     return jsonify([c.to_dict() for c in customers]), 200
 
 
 @sales_bp.post("/api/register_customer")
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def register_customer():
     try:
         data = customer_schema.load(request.get_json())
@@ -35,6 +40,8 @@ def register_customer():
 
 
 @sales_bp.delete("/api/delete_customer/<int:id>")
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def delete_customer(id):
     customer = db.session.get(Customer, id)
     if not customer:
@@ -51,12 +58,14 @@ def delete_customer(id):
 
 
 @sales_bp.get("/api/customer_orders")
+@login_required
 def get_customer_orders():
     orders = CustomerHistory.query.order_by(CustomerHistory.id.desc()).all()
     return jsonify([o.to_dict() for o in orders]), 200
 
 
 @sales_bp.get("/api/customer_history")
+@login_required
 def get_customer_history():
     history = (
         CustomerHistory.query
@@ -68,6 +77,8 @@ def get_customer_history():
 
 
 @sales_bp.post("/api/post_customer_orders")
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def post_customer_order():
     try:
         data = order_schema.load(request.get_json())
@@ -99,6 +110,8 @@ def post_customer_order():
 
 
 @sales_bp.patch("/api/cancel_customer_order/<int:id>")
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def cancel_customer_order(id):
     order = db.session.get(CustomerHistory, id)
     if not order:
@@ -113,6 +126,8 @@ def cancel_customer_order(id):
 
 
 @sales_bp.patch("/api/fulfil_customer_order/<int:id>")
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def fulfil_customer_order(id):
     order = db.session.get(CustomerHistory, id)
     if not order:
