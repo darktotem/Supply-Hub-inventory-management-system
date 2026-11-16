@@ -2,6 +2,7 @@ from datetime import date
 
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
+from sqlalchemy import update
 
 from extensions import db
 from models.inventory import Inventory
@@ -11,6 +12,7 @@ from schemas.warehouse_schema import (
     warehouse_product_schema,
     warehouse_product_update_schema,
 )
+from utils.stock import add_stock
 
 warehouse_bp = Blueprint("warehouse", __name__)
 
@@ -102,9 +104,22 @@ def mark_delivery(order_id):
     if product is None:
         return jsonify({"error": "Product linked to this order does not exist"}), 404
 
-    product.quantity += order.quantity
-    order.status = "Delivered"
-    order.date_of_delivery = date.today()
+    claimed = db.session.execute(
+        update(SupplyHistory)
+        .where(
+            SupplyHistory.id == order_id,
+            SupplyHistory.status.not_in(["Delivered", "Cancelled"]),
+        )
+        .values(status="Delivered", date_of_delivery=date.today())
+        .execution_options(synchronize_session=False)
+    )
+    if claimed.rowcount == 0:
+        db.session.rollback()
+        return jsonify({"error": "This order cannot be marked as delivered"}), 400
+
+    # Step 2: add the stock in one database step
+    add_stock(order.product_id, order.quantity)
+
     db.session.commit()
 
     return jsonify({
@@ -141,3 +156,6 @@ def save_warehouse_report():
 def warehouse_report_history():
     reports = Report.query.order_by(Report.generated_at.desc(), Report.id.desc()).all()
     return jsonify([report.to_dict() for report in reports]), 200
+
+
+

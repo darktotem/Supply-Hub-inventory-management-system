@@ -1,16 +1,23 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
+from sqlalchemy import update
 from extensions import db
 from models.customer import Customer
 from models.customer_history import CustomerHistory
 from models.inventory import Inventory
 from schemas.sales_schema import CustomerSchema, OrderSchema
+from utils.stock import take_stock
 
 sales_bp = Blueprint("sales", __name__)
 
 customer_schema = CustomerSchema()
 order_schema = OrderSchema()
 
+# TODO (Phase 3): the sales officer and the operations director can use every route.
+# The finance officer and the auditor only need GET /api/customer_history.
+
+
+# ---------- Customers ----------
 
 @sales_bp.get("/api/customers")
 def get_customers():
@@ -49,6 +56,7 @@ def delete_customer(id):
     return jsonify({"message": "Customer deleted"}), 200
 
 
+# ---------- Customer orders ----------
 
 @sales_bp.get("/api/customer_orders")
 def get_customer_orders():
@@ -58,6 +66,7 @@ def get_customer_orders():
 
 @sales_bp.get("/api/customer_history")
 def get_customer_history():
+    # History = orders that are finished (fulfilled or cancelled), newest first
     history = (
         CustomerHistory.query
         .filter(CustomerHistory.status != "pending")
@@ -104,11 +113,19 @@ def cancel_customer_order(id):
     if not order:
         return jsonify({"error": "Order not found"}), 404
 
-    if order.status != "pending":
+    # Change the status only if the order is still pending (one step, in the database)
+    claimed = db.session.execute(
+        update(CustomerHistory)
+        .where(CustomerHistory.id == id, CustomerHistory.status == "pending")
+        .values(status="cancelled")
+        .execution_options(synchronize_session=False)
+    )
+    if claimed.rowcount == 0:
+        db.session.rollback()
         return jsonify({"error": "Only pending orders can be cancelled"}), 400
 
-    order.status = "cancelled"
     db.session.commit()
+    order = db.session.get(CustomerHistory, id)
     return jsonify(order.to_dict()), 200
 
 
@@ -118,13 +135,22 @@ def fulfil_customer_order(id):
     if not order:
         return jsonify({"error": "Order not found"}), 404
 
-    if order.status != "pending":
+    # Step 1: claim the order. Only one request can move it from pending to fulfilled.
+    claimed = db.session.execute(
+        update(CustomerHistory)
+        .where(CustomerHistory.id == id, CustomerHistory.status == "pending")
+        .values(status="fulfilled")
+        .execution_options(synchronize_session=False)
+    )
+    if claimed.rowcount == 0:
+        db.session.rollback()
         return jsonify({"error": "Only pending orders can be fulfilled"}), 400
 
-    if order.quantity > order.product.quantity:
+    # Step 2: take the stock, but only if enough is in the database right now.
+    if not take_stock(order.product_id, order.quantity):
+        db.session.rollback()  # this also undoes the claim in step 1
         return jsonify({"error": "Not enough stock to fulfil this order"}), 400
 
-    order.product.quantity = order.product.quantity - order.quantity
-    order.status = "fulfilled"
     db.session.commit()
+    order = db.session.get(CustomerHistory, id)
     return jsonify(order.to_dict()), 200

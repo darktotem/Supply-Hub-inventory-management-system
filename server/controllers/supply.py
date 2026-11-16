@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
+from sqlalchemy import update
 
 from extensions import db
 from models.supplier import Supplier
@@ -127,11 +128,20 @@ def cancel_order(order_id):
     if supply_order is None:
         return jsonify({"error": "Supply order not found"}), 404
 
-    if supply_order.status in ["Delivered", "Cancelled"]:
+    # Change the status only if the order is not already delivered or cancelled
+    claimed = db.session.execute(
+        update(SupplyHistory)
+        .where(
+            SupplyHistory.id == order_id,
+            SupplyHistory.status.not_in(["Delivered", "Cancelled"]),
+        )
+        .values(status=validated_data["status"])
+        .execution_options(synchronize_session=False)
+    )
+    if claimed.rowcount == 0:
+        db.session.rollback()
         return jsonify({"error": "This order cannot be cancelled"}), 400
 
-    supply_order.status = validated_data["status"]
     db.session.commit()
 
     return jsonify({"message": "Supply order cancelled successfully"}), 200
-    
