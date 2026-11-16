@@ -4,6 +4,7 @@ from extensions import db
 from models.customer import Customer
 from models.customer_history import CustomerHistory
 from models.inventory import Inventory
+from models.invoice import Invoice  # Inventory points to Invoice, so it must be loaded
 from controllers.sales import sales_bp
 
 

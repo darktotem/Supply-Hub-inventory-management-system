@@ -20,3 +20,4 @@ pytest = "*"
 
 [dev-packages]
 pytest = "*"
+requests = "*"

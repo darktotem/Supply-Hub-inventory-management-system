@@ -233,4 +233,53 @@ def test_customer_history_only_shows_finished_orders(client, customer, product):
 
     assert response.status_code == 200
     assert pending["id"] not in ids
-    assert ids == [cancelled["id"], fulfilled["id"]]  # newest first    
+    assert ids == [cancelled["id"], fulfilled["id"]]  # newest first
+
+
+# ---------- Stock consistency ----------
+
+def test_orders_competing_for_scarce_stock(client, customer, product):
+    # Stock is 10. Each order of 4 fits on its own, so all three can be created...
+    orders = [make_order(client, customer, product, quantity=4) for i in range(3)]
+
+    # ...but only two of them can be fulfilled
+    codes = []
+    for order in orders:
+        response = client.patch("/api/fulfil_customer_order/" + str(order["id"]))
+        codes.append(response.status_code)
+
+    assert codes == [200, 200, 400]
+    assert product.quantity == 2
+
+
+def test_failed_fulfil_leaves_order_pending(client, customer, product):
+    order = make_order(client, customer, product, quantity=8)
+    product.quantity = 3
+    db.session.commit()
+
+    response = client.patch("/api/fulfil_customer_order/" + str(order["id"]))
+    orders = client.get("/api/customer_orders").get_json()
+
+    assert response.status_code == 400
+    assert orders[0]["status"] == "pending"
+    assert product.quantity == 3
+
+
+def test_cancel_then_fulfil_does_not_touch_stock(client, customer, product):
+    order = make_order(client, customer, product, quantity=2)
+    client.patch("/api/cancel_customer_order/" + str(order["id"]))
+
+    response = client.patch("/api/fulfil_customer_order/" + str(order["id"]))
+
+    assert response.status_code == 400
+    assert product.quantity == 10
+
+
+def test_fulfil_then_cancel_keeps_stock_reduced(client, customer, product):
+    order = make_order(client, customer, product, quantity=2)
+    client.patch("/api/fulfil_customer_order/" + str(order["id"]))
+
+    response = client.patch("/api/cancel_customer_order/" + str(order["id"]))
+
+    assert response.status_code == 400
+    assert product.quantity == 8
