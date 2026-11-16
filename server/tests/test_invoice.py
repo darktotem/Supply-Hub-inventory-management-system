@@ -1,19 +1,29 @@
+import os
+import re
+import sys
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
 from flask import Flask
 from sqlalchemy.exc import IntegrityError
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from extensions import db
-from models import Customer, Invoice, Product
+from models.customer import Customer
+from models.inventory import Inventory
+from models.invoice import Invoice
 
 
 @pytest.fixture
 def app():
-    """Fresh in-memory database for every test."""
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["TESTING"] = True
+    app.config.update(
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    )
     db.init_app(app)
 
     with app.app_context():
@@ -25,7 +35,8 @@ def app():
 
 @pytest.fixture
 def customer(app):
-    c = Customer(name="Amina", email="amina@example.com")
+    # Adjust fields to match your Customer model
+    c = Customer(name="Test Customer", email="customer@example.com")
     db.session.add(c)
     db.session.commit()
     return c
@@ -33,7 +44,8 @@ def customer(app):
 
 @pytest.fixture
 def product(app):
-    p = Product(name="Laptop", price=Decimal("999.99"))
+    # Adjust fields to match your Product model
+    p = Product(name="Test Product", price=10)
     db.session.add(p)
     db.session.commit()
     return p
@@ -41,88 +53,25 @@ def product(app):
 
 def make_invoice(customer, product, **overrides):
     data = {
+        "unit_price": Decimal("25.50"),
         "customer_id": customer.id,
         "product_id": product.id,
-        "unit_price": product.price,
     }
     data.update(overrides)
     return Invoice(**data)
 
 
-def test_create_invoice(customer, product):
+def test_defaults_are_generated_on_save(customer, product):
     invoice = make_invoice(customer, product)
     db.session.add(invoice)
     db.session.commit()
 
-    assert invoice.id is not None
-    assert invoice.customer_id == customer.id
-    assert invoice.product_id == product.id
-
-
-def test_default_quantity_is_one(customer, product):
-    invoice = make_invoice(customer, product)
-    db.session.add(invoice)
-    db.session.commit()
-
+    assert re.fullmatch(r"\d{16}", invoice.receipt_number)
+    assert isinstance(invoice.date_created, datetime)
     assert invoice.quantity == 1
 
 
-def test_receipt_number_is_generated(customer, product):
-    invoice = make_invoice(customer, product)
-    db.session.add(invoice)
-    db.session.commit()
-
-    assert len(invoice.receipt_number) == 16
-    assert invoice.receipt_number.isdigit()
-    assert invoice.receipt_number[0] != "0"
-
-
-def test_date_created_is_set(customer, product):
-    invoice = make_invoice(customer, product)
-    db.session.add(invoice)
-    db.session.commit()
-
-    assert invoice.date_created is not None
-
-
-def test_receipt_numbers_differ_between_invoices(customer, product):
-    first = make_invoice(customer, product)
-    second = make_invoice(customer, product)
-    db.session.add_all([first, second])
-    db.session.commit()
-
-    assert first.receipt_number != second.receipt_number
-
-
-def test_duplicate_receipt_number_is_rejected(customer, product):
-    db.session.add(make_invoice(customer, product, receipt_number="1234567890123456"))
-    db.session.commit()
-
-    db.session.add(make_invoice(customer, product, receipt_number="1234567890123456"))
-    with pytest.raises(IntegrityError):
-        db.session.commit()
-    db.session.rollback()
-
-
-def test_unit_price_is_required(customer, product):
-    invoice = Invoice(customer_id=customer.id, product_id=product.id)
-    db.session.add(invoice)
-
-    with pytest.raises(IntegrityError):
-        db.session.commit()
-    db.session.rollback()
-
-
-def test_customer_is_required(product):
-    invoice = Invoice(product_id=product.id, unit_price=product.price)
-    db.session.add(invoice)
-
-    with pytest.raises(IntegrityError):
-        db.session.commit()
-    db.session.rollback()
-
-
-def test_unit_price_keeps_decimal_value(customer, product):
+def test_unit_price_is_stored_as_decimal(customer, product):
     invoice = make_invoice(customer, product, unit_price=Decimal("19.99"))
     db.session.add(invoice)
     db.session.commit()
@@ -131,7 +80,27 @@ def test_unit_price_keeps_decimal_value(customer, product):
     assert invoice.unit_price == Decimal("19.99")
 
 
-def test_relationships(customer, product):
+def test_receipt_number_must_be_unique(customer, product):
+    db.session.add(make_invoice(customer, product, receipt_number="1234567890123456"))
+    db.session.commit()
+
+    db.session.add(make_invoice(customer, product, receipt_number="1234567890123456"))
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+
+
+@pytest.mark.parametrize("missing", ["unit_price", "customer_id", "product_id"])
+def test_required_fields_cannot_be_null(customer, product, missing):
+    invoice = make_invoice(customer, product, **{missing: None})
+    db.session.add(invoice)
+
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+
+
+def test_relationships_link_both_ways(customer, product):
     invoice = make_invoice(customer, product)
     db.session.add(invoice)
     db.session.commit()

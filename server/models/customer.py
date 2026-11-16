@@ -8,6 +8,8 @@ class Customer(db.Model):
     customer_name = db.Column(db.String, nullable=False)
     contact = db.Column(db.String, nullable=False)
 
+    invoices = db.relationship("Invoice", back_populates="customer")
+
     def to_dict(self):
         return {
             "id": self.id,
