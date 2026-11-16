@@ -1,15 +1,13 @@
 import pytest
 
+from datetime import date
+
 from app import app
 from extensions import db
-from datetime import date
+from models.inventory import Inventory
 from models.supplier import Supplier
 from models.supply_history import SupplyHistory
-from models.inventory import Inventory
-from controllers.supply import supply_bp
-
-if "supply" not in app.blueprints:
-    app.register_blueprint(supply_bp)
+from models.user import Role
 
 
 @pytest.fixture
@@ -21,11 +19,13 @@ def client():
 
     with app.app_context():
         db.create_all()
-
         yield app.test_client()
-
         db.session.remove()
         db.drop_all()
+
+
+def auth_headers(client, make_user, auth_header, username="procurement", role=Role.PROCUREMENT):
+    return auth_header(make_user(username, role=role))
 
 def test_create_supplier(client):
     supplier = Supplier(

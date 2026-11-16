@@ -1,9 +1,7 @@
-
 import pytest
 
 from app import app
 from extensions import db
-from models.inventory import Inventory
 
 
 @pytest.fixture
@@ -23,14 +21,13 @@ def client():
         db.drop_all()
 
 
-
 def test_create_inventory(client):
-    response = client.post("/api/inventory", json={
+    response = client.post("/inventory", json={
         "product_name": "Cooking Oil",
         "category": "Food",
         "quantity": 50,
         "threshold": 10,
-        "price": 350
+        "price": 350,
     })
 
     assert response.status_code == 201
@@ -39,15 +36,15 @@ def test_create_inventory(client):
 
 
 def test_get_all_inventory(client):
-    client.post("/api/inventory", json={
+    client.post("/inventory", json={
         "product_name": "Cooking Oil",
         "category": "Food",
         "quantity": 50,
         "threshold": 10,
-        "price": 350
+        "price": 350,
     })
 
-    response = client.get("/api/inventory")
+    response = client.get("/inventory")
 
     assert response.status_code == 200
     assert len(response.json) == 1
@@ -55,17 +52,17 @@ def test_get_all_inventory(client):
 
 
 def test_get_one_inventory(client):
-    create_response = client.post("/api/inventory", json={
+    create_response = client.post("/inventory", json={
         "product_name": "Cooking Oil",
         "category": "Food",
         "quantity": 50,
         "threshold": 10,
-        "price": 350
+        "price": 350,
     })
 
     item_id = create_response.json["id"]
 
-    response = client.get(f"/api/inventory/{item_id}")
+    response = client.get(f"/inventory/{item_id}")
 
     assert response.status_code == 200
     assert response.json["id"] == item_id
@@ -73,19 +70,19 @@ def test_get_one_inventory(client):
 
 
 def test_update_inventory(client):
-    create_response = client.post("/api/inventory", json={
+    create_response = client.post("/inventory", json={
         "product_name": "Cooking Oil",
         "category": "Food",
         "quantity": 50,
         "threshold": 10,
-        "price": 350
+        "price": 350,
     })
 
     item_id = create_response.json["id"]
 
-    response = client.put(f"/api/inventory/{item_id}", json={
+    response = client.put(f"/inventory/{item_id}", json={
         "quantity": 30,
-        "price": 400
+        "price": 400,
     })
 
     assert response.status_code == 200
@@ -94,44 +91,43 @@ def test_update_inventory(client):
 
 
 def test_delete_inventory(client):
-    create_response = client.post("/api/inventory", json={
+    create_response = client.post("/inventory", json={
         "product_name": "Cooking Oil",
         "category": "Food",
         "quantity": 50,
         "threshold": 10,
-        "price": 350
+        "price": 350,
     })
 
     item_id = create_response.json["id"]
 
-    response = client.delete(f"/api/inventory/{item_id}")
+    response = client.delete(f"/inventory/{item_id}")
 
     assert response.status_code == 200
     assert response.json["message"] == "Inventory item deleted successfully"
 
-    # Confirm the item no longer exists
-    get_response = client.get(f"/api/inventory/{item_id}")
+    get_response = client.get(f"/inventory/{item_id}")
     assert get_response.status_code == 404
 
 
 def test_get_low_stock(client):
-    client.post("/api/inventory", json={
+    client.post("/inventory", json={
         "product_name": "Sugar",
         "category": "Food",
         "quantity": 5,
         "threshold": 10,
-        "price": 180
+        "price": 180,
     })
 
-    client.post("/api/inventory", json={
+    client.post("/inventory", json={
         "product_name": "Cooking Oil",
         "category": "Food",
         "quantity": 50,
         "threshold": 10,
-        "price": 350
+        "price": 350,
     })
 
-    response = client.get("/api/inventory/low-stock")
+    response = client.get("/inventory/low-stock")
 
     assert response.status_code == 200
     assert len(response.json) == 1
