@@ -1,6 +1,8 @@
+
 from flask import Flask, request
-from config import Config
+from config import Config                   
 from extensions import db, migrate, bcrypt
+
 
 # Import Models
 from models import Inventory, Invoice, Supplier, SupplyHistory, AuditLog, Customer, CustomerHistory, User
@@ -28,10 +30,14 @@ def add_cors_headers(response):
     if origin and origin in app.config["CORS_ORIGINS"]:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST,PUT, PATCH, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
         response.headers["Access-Control-Max-Age"] = "600"
         response.headers["Vary"] = "Origin"
     return response
+
+
+import models  # noqa: E402,F401
+
 
 # Register decorators
 app.register_blueprint(inventory_bp)
