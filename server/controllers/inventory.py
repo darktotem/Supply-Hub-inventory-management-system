@@ -2,7 +2,6 @@ from flask import request, Blueprint, jsonify
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
-from app import app
 from extensions import db
 from models.inventory import Inventory
 from schemas.inventory_schema import inventory_schema, search_schema

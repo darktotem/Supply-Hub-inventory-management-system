@@ -1,9 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from config import Config
 from extensions import db, migrate, bcrypt
 
 # Import Models
-from models import Inventory, Invoice, Supplier, SupplyHistory, AuditLog, Customer, CustomerHistory, User
+from models import Inventory, Invoice, Supplier, SupplyHistory, AuditLog, Customer, CustomerHistory, User, Payment
 
 # Import decorators
 from controllers.auth import auth_bp  
@@ -12,6 +12,7 @@ from controllers.invoice import invoice_bp
 from controllers.sales import sales_bp
 from controllers.warehouse import warehouse_bp
 from controllers.inventory import inventory_bp
+from controllers.audit import audit_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -33,6 +34,14 @@ def add_cors_headers(response):
         response.headers["Vary"] = "Origin"
     return response
 
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Route not found"}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Internal server error"}), 500
+
 # Register decorators
 app.register_blueprint(inventory_bp)
 app.register_blueprint(auth_bp)
@@ -40,6 +49,9 @@ app.register_blueprint(supply_bp)
 app.register_blueprint(invoice_bp)
 app.register_blueprint(sales_bp)
 app.register_blueprint(warehouse_bp)
+app.register_blueprint(audit_bp)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

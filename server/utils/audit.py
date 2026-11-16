@@ -1,5 +1,5 @@
 from extensions import db
-from models.audit_log import AuditLog
+from models.audit import AuditLog
 from utils.decorators import current_user
 
 
