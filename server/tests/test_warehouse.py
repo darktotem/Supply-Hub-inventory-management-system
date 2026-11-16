@@ -83,6 +83,65 @@ def test_mark_delivery_updates_stock_and_status():
         db.drop_all()
 
 
+def test_mark_delivery_twice_does_not_increase_stock_twice():
+    app.config.update(
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+    )
+
+    with app.app_context():
+        db.create_all()
+
+        supplier = Supplier(
+            name="Fresh Farm",
+            contact_person="Mary",
+            phone="0723456789",
+            email="freshfarm@gmail.com",
+            address="Nairobi",
+        )
+
+        product = Inventory(
+            product_name="Maize",
+            category="Food",
+            quantity=20,
+            threshold=5,
+            price=100,
+        )
+
+        db.session.add_all([supplier, product])
+        db.session.commit()
+
+        order = SupplyHistory(
+            product_id=product.id,
+            supplier_id=supplier.id,
+            quantity=10,
+            date_of_order=date.today(),
+        )
+
+        db.session.add(order)
+        db.session.commit()
+
+        with app.test_client() as client:
+            first_response = client.patch(
+                f"/warehouse/deliveries/{order.id}/deliver"
+            )
+
+            second_response = client.patch(
+                f"/warehouse/deliveries/{order.id}/deliver"
+            )
+
+            assert first_response.status_code == 200
+            assert second_response.status_code == 400
+
+            db.session.refresh(product)
+            db.session.refresh(order)
+
+            assert product.quantity == 30
+            assert order.status == "Delivered"
+
+        db.session.remove()
+        db.drop_all()
+
 def test_inventory_report_can_be_saved_and_listed():
     app.config.update(
         TESTING=True,
@@ -118,6 +177,61 @@ def test_inventory_report_can_be_saved_and_listed():
             assert history_response.status_code == 200
             assert len(history_response.json) == 1
             assert history_response.json[0]["id"] == saved_response.json["id"]
+
+        db.session.remove()
+        db.drop_all()
+
+def test_cancelled_supply_order_cannot_be_delivered():
+    app.config.update(
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+    )
+
+    with app.app_context():
+        db.create_all()
+
+        supplier = Supplier(
+            name="Trusted Farm",
+            contact_person="Peter",
+            phone="0712345678",
+            email="trustedfarm@gmail.com",
+            address="Nairobi",
+        )
+
+        product = Inventory(
+            product_name="Sugar",
+            category="Food",
+            quantity=20,
+            threshold=5,
+            price=180,
+        )
+
+        db.session.add_all([supplier, product])
+        db.session.commit()
+
+        order = SupplyHistory(
+            product_id=product.id,
+            supplier_id=supplier.id,
+            quantity=10,
+            date_of_order=date.today(),
+            status="Cancelled",
+        )
+
+        db.session.add(order)
+        db.session.commit()
+
+        with app.test_client() as client:
+            response = client.patch(
+                f"/warehouse/deliveries/{order.id}/deliver"
+            )
+
+            assert response.status_code == 400
+
+            db.session.refresh(product)
+            db.session.refresh(order)
+
+            assert product.quantity == 20
+            assert order.status == "Cancelled"
 
         db.session.remove()
         db.drop_all()
