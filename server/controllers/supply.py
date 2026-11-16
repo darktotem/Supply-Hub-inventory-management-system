@@ -2,19 +2,22 @@ from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
 from extensions import db
+from models.inventory import Inventory
 from models.supplier import Supplier
 from models.supply_history import SupplyHistory
-from models.inventory import Inventory
+from models.user import Role
 from schemas.supply_schema import (
     supply_schema,
     supply_order_schema,
     cancel_order_status_schema,
     supply_history_schema
 )
+from utils.decorators import login_required, roles_required
 
 supply_bp = Blueprint("supply", __name__)
 
 @supply_bp.route("/supplyhistory", methods=["GET"])
+@login_required
 def get_supply_history():
     supply_history = SupplyHistory.query.all()
     result = supply_history_schema.dump(supply_history)
@@ -23,6 +26,8 @@ def get_supply_history():
 
 #Register a new supplier
 @supply_bp.route("/register_supplier", methods=["POST"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def register_supplier():
     data = request.get_json(silent=True)
 
@@ -56,6 +61,8 @@ def register_supplier():
 
 #Delete a supplier
 @supply_bp.route("/delete_suppliers/<int:supplier_id>", methods=["DELETE"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def delete_supplier(supplier_id):
     supplier = db.session.get(Supplier, supplier_id)
 
@@ -76,6 +83,8 @@ def delete_supplier(supplier_id):
 
 #Create a new supply order
 @supply_bp.route("/supply_orders", methods=["POST"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def create_supply_order():
     data = request.get_json(silent=True)
 
@@ -111,6 +120,8 @@ def create_supply_order():
 
 #Cancel an order
 @supply_bp.route("/cancel_order/<int:order_id>", methods=["PATCH"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def cancel_order(order_id):
     data = request.get_json(silent=True)
 
