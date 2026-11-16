@@ -22,4 +22,4 @@ class Invoice(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
 
     customer = db.relationship("Customer", back_populates="invoices")
-    product = db.relationship("Product", back_populates="invoices")
+    product = db.relationship("Inventory", back_populates="invoices")
