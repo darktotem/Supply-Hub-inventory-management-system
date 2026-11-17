@@ -34,7 +34,9 @@ function History() {
         }
     }
 
-
+    useEffect(() => {
+        fetchHistory()
+    }, [])
 
 
     const filteredTransactions = transactions.filter((transaction) => {
