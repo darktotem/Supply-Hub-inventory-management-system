@@ -228,8 +228,8 @@ function SupplyOrders() {
                             {orders.map((order) => (
                                 <tr key={order.id}>
                                     <td>{order.id}</td>
-                                    <td>{order.supplier}</td>
-                                    <td>{order.product}</td>
+                                    <td>{order.supplier?.name}</td>
+                                    <td>{products.find((product) => product.id === order.product_id)?.product_name || order.product_id}</td>
                                     <td>{order.quantity}</td>
                                     <td>{order.orderDate}</td>
                                     <td>{order.status}</td>
