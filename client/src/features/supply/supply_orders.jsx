@@ -54,10 +54,10 @@ function SupplyOrders() {
     }, [])
 
     const [formData, setFormData] = useState({
-        supplier: '',
-        product: '',
+        supplier_id: '',
+        product_id: '',
         quantity: '',
-        orderDate: ''
+        date_of_order: ''
     })
 
     const handleChange = (e) => {
@@ -79,10 +79,10 @@ function SupplyOrders() {
         setOrders([...orders, newOrder])
 
         setFormData({
-            supplier: '',
-            product: '',
+            supplier_id: '',
+            product_id: '',
             quantity: '',
-            orderDate: ''
+            date_of_order: ''
         })
     }
 
