@@ -67,6 +67,8 @@ function SupplyOrders() {
             setOrders(data)
         } catch (error) {
             setError(error.message)
+        } finally {
+            setLoading(false)
         }
     }
 
