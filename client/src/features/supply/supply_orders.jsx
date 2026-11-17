@@ -49,26 +49,27 @@ function SupplyOrders() {
 
     // Fetch existing supply orders
     const fetchOrders = async () => {
-    try {
-        const token = localStorage.getItem('token')
+        try {
+            const token = localStorage.getItem('token')
 
-        const response = await fetch(`${API_URL}/supplyhistory`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
+            const response = await fetch(`${API_URL}/supplyhistory`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Failed to fetch supply orders.')
             }
-        })
 
-        const data = await response.json()
-
-        if (!response.ok) {
-            throw new Error(data.error || data.message || 'Failed to fetch supply orders.')
+            setOrders(data)
+        } catch (error) {
+            setError(error.message)
         }
-
-        setOrders(data)
-    } catch (error) {
-        setError(error.message)
     }
-}
+
     //Load suppliers and products on component mount
     useEffect(() => {
         fetchSuppliers()
@@ -89,46 +90,46 @@ function SupplyOrders() {
         })
     }
 
-   const handleSubmit = async (e) => {
-    e.preventDefault()
+    const handleSubmit = async (e) => {
+        e.preventDefault()
 
-    try {
-        const token = localStorage.getItem('token')
+        try {
+            const token = localStorage.getItem('token')
 
-        const response = await fetch(`${API_URL}/supply_orders`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                supplier_id: Number(formData.supplier_id),
-                product_id: Number(formData.product_id),
-                quantity: Number(formData.quantity),
-                date_of_order: formData.date_of_order
+            const response = await fetch(`${API_URL}/supply_orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    supplier_id: Number(formData.supplier_id),
+                    product_id: Number(formData.product_id),
+                    quantity: Number(formData.quantity),
+                    date_of_order: formData.date_of_order
+                })
             })
-        })
 
-        const data = await response.json()
+            const data = await response.json()
 
-        if (!response.ok) {
-            throw new Error(data.error || data.message || 'Failed to create supply order.')
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Failed to create supply order.')
+            }
+
+            setOrders([...orders, data])
+
+            setFormData({
+                supplier_id: '',
+                product_id: '',
+                quantity: '',
+                date_of_order: ''
+            })
+
+            setError('')
+        } catch (error) {
+            setError(error.message)
         }
-
-        setOrders([...orders, data])
-
-        setFormData({
-            supplier_id: '',
-            product_id: '',
-            quantity: '',
-            date_of_order: ''
-        })
-
-        setError('')
-    } catch (error) {
-        setError(error.message)
     }
-}
 
     const handleApprove = (id) => {
         setOrders(orders.map((order) =>
@@ -166,7 +167,6 @@ function SupplyOrders() {
                             {supplier.name}
                         </option>
                     ))}
-
                 </select>
 
                 <select
@@ -181,7 +181,6 @@ function SupplyOrders() {
                             {product.product_name}
                         </option>
                     ))}
-
                 </select>
 
                 <input
