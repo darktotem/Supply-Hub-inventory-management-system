@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+const API_URL = 'http://127.0.0.1:5000'
 
 function SupplyOrders() {
     const [orders, setOrders] = useState([])
+    const [suppliers, setSuppliers] = useState([])
+    const [products, setProducts] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
+
 
     const [formData, setFormData] = useState({
         supplier: '',
