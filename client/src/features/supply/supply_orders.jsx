@@ -241,7 +241,13 @@ function SupplyOrders() {
                     required
                 />
 
-                <button type="submit" disabled={submitting}>{submitting ? 'Creating...' : 'Create Order'}</button>
+                <button 
+                type="submit" 
+                disabled={submitting || suppliers.length === 0 || products.length === 0}
+                >
+                {submitting ? 'Creating...' : 'Create Order'}
+                </button>
+                
             </form>
 
             <div className="orders-list">
