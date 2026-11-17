@@ -74,6 +74,7 @@ function SupplyOrders() {
     useEffect(() => {
         fetchSuppliers()
         fetchProducts()
+        fetchOrders()
     }, [])
 
     const [formData, setFormData] = useState({
