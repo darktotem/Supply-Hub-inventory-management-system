@@ -146,7 +146,7 @@ function SupplyOrders() {
         try {
             setCancelling(true)
             setSuccess('')
-            
+
             const token = localStorage.getItem('token')
 
             const response = await fetch(`${API_URL}/cancel_order/${id}`, {
@@ -196,6 +196,9 @@ function SupplyOrders() {
                     required
                 >
                     <option value="">Select Supplier</option>
+                    {suppliers.length === 0 && (
+                        <option value="" disabled>No suppliers available</option>
+                    )}
                     {suppliers.map((supplier) => (
                         <option key={supplier.id} value={supplier.id}>
                             {supplier.name}
@@ -210,6 +213,9 @@ function SupplyOrders() {
                     required
                 >
                     <option value="">Select Product</option>
+                    {products.length === 0 && (
+                        <option value="" disabled>No products available</option>
+                    )}
                     {products.map((product) => (
                         <option key={product.id} value={product.id}>
                             {product.product_name}
