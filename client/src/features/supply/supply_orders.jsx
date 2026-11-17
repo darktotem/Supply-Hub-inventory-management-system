@@ -158,6 +158,8 @@ function SupplyOrders() {
                     ? { ...order, status: 'Cancelled' }
                     : order
             ))
+
+            setError('')
         } catch (error) {
             setError(error.message)
         }
