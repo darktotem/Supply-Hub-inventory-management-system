@@ -8,6 +8,7 @@ function SupplyOrders() {
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [cancelling, setCancelling] = useState(false)
     const [error, setError] = useState('')
 
     //Fetch suppliers
@@ -140,6 +141,7 @@ function SupplyOrders() {
 
     const handleCancel = async (id) => {
         try {
+            setCancelling(true)
             const token = localStorage.getItem('token')
 
             const response = await fetch(`${API_URL}/cancel_order/${id}`, {
@@ -166,6 +168,8 @@ function SupplyOrders() {
             setError('')
         } catch (error) {
             setError(error.message)
+        } finally {
+            setCancelling(false)
         }
     }
 
@@ -260,8 +264,8 @@ function SupplyOrders() {
                                     <td>
                                         {order.status === 'Pending' && (
                                                 <button
-                                                    onClick={() => handleCancel(order.id)}>
-                                                    Cancel
+                                                    onClick={() => handleCancel(order.id)} disabled={cancelling}>
+                                                    {cancelling ? 'Cancelling...' : 'Cancel'}
                                                 </button>
                                         )}
                                     </td>
