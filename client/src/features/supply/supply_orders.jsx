@@ -167,6 +167,7 @@ function SupplyOrders() {
         <div className="supply-orders-page">
             <h2>Supply Orders</h2>
             <p>View and manage your supply orders.</p>
+            {error && <p className="error-message">{error}</p>}
 
             <form onSubmit={handleSubmit} className="order-form">
                 <h3>Create Supply Order</h3>
@@ -223,9 +224,11 @@ function SupplyOrders() {
             <div className="orders-list">
                 <h3>All Supply Orders</h3>
 
-                {orders.length === 0 ? (
+                {loading ? (
+                    <p>Loading supply orders...</p>
+                ) : orders.length === 0 ? (
                     <p>No supply orders found.</p>
-                ) : (
+                ) : ( 
                     <table>
                         <thead>
                             <tr>
@@ -250,13 +253,10 @@ function SupplyOrders() {
                                     <td>{order.status}</td>
                                     <td>
                                         {order.status === 'Pending' && (
-                                            <>
                                                 <button
-                                                    onClick={() => handleCancel(order.id)}
-                                                >
+                                                    onClick={() => handleCancel(order.id)}>
                                                     Cancel
                                                 </button>
-                                            </>
                                         )}
                                     </td>
                                 </tr>
