@@ -10,6 +10,30 @@ function History() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
 
+    const fetchHistory = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(`${API_URL}/supplyhistory`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to fetch supply history.')
+            }
+
+            setTransactions(data)
+        } catch (error) {
+            setError(error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
 
 
 
