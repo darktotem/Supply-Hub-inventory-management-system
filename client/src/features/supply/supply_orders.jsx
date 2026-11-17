@@ -119,7 +119,7 @@ function SupplyOrders() {
                 throw new Error(data.error || data.message || 'Failed to create supply order.')
             }
 
-            setOrders([...orders, data])
+            await fetchOrders()
 
             setFormData({
                 supplier_id: '',
