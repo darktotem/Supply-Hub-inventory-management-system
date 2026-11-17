@@ -10,6 +10,7 @@ function SupplyOrders() {
     const [submitting, setSubmitting] = useState(false)
     const [cancelling, setCancelling] = useState(false)
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
 
     //Fetch suppliers
     const fetchSuppliers = async () => {
@@ -123,6 +124,7 @@ function SupplyOrders() {
             }
 
             await fetchOrders()
+            setSuccess('Supply order created successfully!')
 
             setFormData({
                 supplier_id: '',
@@ -166,6 +168,7 @@ function SupplyOrders() {
             ))
 
             setError('')
+            setSuccess('Supply order cancelled successfully!')
         } catch (error) {
             setError(error.message)
         } finally {
@@ -178,6 +181,7 @@ function SupplyOrders() {
             <h2>Supply Orders</h2>
             <p>View and manage your supply orders.</p>
             {error && <p className="error-message">{error}</p>}
+            {success && <p className="success-message">{success}</p>}
 
             <form onSubmit={handleSubmit} className="order-form">
                 <h3>Create Supply Order</h3>
