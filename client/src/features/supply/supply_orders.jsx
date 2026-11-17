@@ -99,6 +99,7 @@ function SupplyOrders() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setSubmitting(true)
+        setSuccess('')
 
         try {
             const token = localStorage.getItem('token')
@@ -144,6 +145,8 @@ function SupplyOrders() {
     const handleCancel = async (id) => {
         try {
             setCancelling(true)
+            setSuccess('')
+            
             const token = localStorage.getItem('token')
 
             const response = await fetch(`${API_URL}/cancel_order/${id}`, {
