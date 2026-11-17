@@ -231,7 +231,7 @@ function SupplyOrders() {
                                     <td>{order.supplier?.name}</td>
                                     <td>{products.find((product) => product.id === order.product_id)?.product_name || order.product_id}</td>
                                     <td>{order.quantity}</td>
-                                    <td>{order.orderDate}</td>
+                                    <td>{order.date_of_order}</td>
                                     <td>{order.status}</td>
                                     <td>
                                         {order.status === 'Pending' && (
