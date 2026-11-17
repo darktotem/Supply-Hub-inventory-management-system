@@ -38,21 +38,24 @@ function History() {
         fetchHistory()
     }, [])
 
+   
+const filteredTransactions = transactions.filter((transaction) => {
+    const search = searchTerm.toLowerCase()
 
-    const filteredTransactions = transactions.filter((transaction) => {
-        const search = searchTerm.toLowerCase()
+    const supplierName = transaction.supplier?.name || ''
+    const productId = String(transaction.product_id || '')
 
-        const matchesSearch = 
-        transaction.id.toString().toLowerCase().includes(search) ||
-        transaction.supplier.toLowerCase().includes(search) ||
-        transaction.product.toLowerCase().includes(search)
+    const matchesSearch =
+        String(transaction.id).includes(search) ||
+        supplierName.toLowerCase().includes(search) ||
+        productId.includes(search)
 
-        const matchesStatus = 
-        statusFilter === 'All' || transaction.status.toLowerCase() === statusFilter.toLowerCase()
+    const matchesStatus =
+        statusFilter === 'All' ||
+        transaction.status.toLowerCase() === statusFilter.toLowerCase()
 
-        return matchesSearch && matchesStatus
-        
-    })
+    return matchesSearch && matchesStatus
+})
 
     return (
         <div className="history-page">
