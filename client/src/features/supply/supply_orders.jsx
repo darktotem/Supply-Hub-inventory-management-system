@@ -47,6 +47,28 @@ function SupplyOrders() {
         }
     }
 
+    // Fetch existing supply orders
+    const fetchOrders = async () => {
+    try {
+        const token = localStorage.getItem('token')
+
+        const response = await fetch(`${API_URL}/supplyhistory`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+            throw new Error(data.error || data.message || 'Failed to fetch supply orders.')
+        }
+
+        setOrders(data)
+    } catch (error) {
+        setError(error.message)
+    }
+}
     //Load suppliers and products on component mount
     useEffect(() => {
         fetchSuppliers()
