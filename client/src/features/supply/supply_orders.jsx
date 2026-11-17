@@ -9,6 +9,43 @@ function SupplyOrders() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
 
+    //Fetch suppliers
+    const fetchSuppliers = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(`${API_URL}/suppliers`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Failed to fetch suppliers.')
+            }
+
+            setSuppliers(data)
+        } catch (error) {
+            setError(error.message)
+        }
+    }
+
+    // Fetch products
+    const fetchProducts = async () => {
+        try {
+            const response = await fetch(`${API_URL}/inventory`)
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Failed to fetch products.')
+            }
+
+            setProducts(data)
+        } catch (error) {
+            setError(error.message)
+        }
+    }
 
     const [formData, setFormData] = useState({
         supplier: '',
