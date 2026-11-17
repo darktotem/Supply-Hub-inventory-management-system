@@ -47,6 +47,12 @@ function SupplyOrders() {
         }
     }
 
+    //Load suppliers and products on mount
+    useEffect(() => {
+        fetchSuppliers()
+        fetchProducts()
+    }, [])
+
     const [formData, setFormData] = useState({
         supplier: '',
         product: '',
