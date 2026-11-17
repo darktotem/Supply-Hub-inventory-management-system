@@ -132,14 +132,6 @@ function SupplyOrders() {
         }
     }
 
-    const handleApprove = (id) => {
-        setOrders(orders.map((order) =>
-            order.id === id
-                ? { ...order, status: 'Approved' }
-                : order
-        ))
-    }
-
     const handleCancel = async (id) => {
         try {
             const token = localStorage.getItem('token')
@@ -257,12 +249,6 @@ function SupplyOrders() {
                                     <td>
                                         {order.status === 'Pending' && (
                                             <>
-                                                <button
-                                                    onClick={() => handleApprove(order.id)}
-                                                >
-                                                    Approve
-                                                </button>
-
                                                 <button
                                                     onClick={() => handleCancel(order.id)}
                                                 >
