@@ -67,16 +67,33 @@ function SupplyOrders() {
         })
     }
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
+   const handleSubmit = async (e) => {
+    e.preventDefault()
 
-        const newOrder = {
-            id: Date.now(),
-            ...formData,
-            status: 'Pending'
+    try {
+        const token = localStorage.getItem('token')
+
+        const response = await fetch(`${API_URL}/supply_orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                supplier_id: Number(formData.supplier_id),
+                product_id: Number(formData.product_id),
+                quantity: Number(formData.quantity),
+                date_of_order: formData.date_of_order
+            })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+            throw new Error(data.error || data.message || 'Failed to create supply order.')
         }
 
-        setOrders([...orders, newOrder])
+        setOrders([...orders, data])
 
         setFormData({
             supplier_id: '',
@@ -84,7 +101,12 @@ function SupplyOrders() {
             quantity: '',
             date_of_order: ''
         })
+
+        setError('')
+    } catch (error) {
+        setError(error.message)
     }
+}
 
     const handleApprove = (id) => {
         setOrders(orders.map((order) =>
