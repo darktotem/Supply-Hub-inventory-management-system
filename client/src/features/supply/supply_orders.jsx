@@ -125,14 +125,20 @@ function SupplyOrders() {
 
                 </select>
 
-                <input
-                    type="text"
-                    name="product"
-                    placeholder="Product Name"
-                    value={formData.product}
+                <select
+                    name="product_id"
+                    value={formData.product_id}
                     onChange={handleChange}
                     required
-                />
+                >
+                    <option value="">Select Product</option>
+                    {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                            {product.product_name}
+                        </option>
+                    ))}
+
+                </select>
 
                 <input
                     type="number"
