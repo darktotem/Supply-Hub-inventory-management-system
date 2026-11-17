@@ -65,7 +65,7 @@ const filteredTransactions = transactions.filter((transaction) => {
             <div className="filters">
                 <input
                     type="text"
-                    placeholder="Search by order ID, Supplier, or Product..."
+                    placeholder="Search by order ID, Supplier, or Product ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -85,7 +85,11 @@ const filteredTransactions = transactions.filter((transaction) => {
             <div className="transaction-list">
                 <h3>Previous Supply Transactions</h3>
 
-                {filteredTransactions.length === 0 ? (
+                {loading ? (
+                    <p>Loading supply history...</p>
+                ) : error ? (
+                    <p className="error">{error}</p>
+                ) : filteredTransactions.length === 0 ? (
                     <p>No supply history available.</p>
                 ) : (
                     <table>
@@ -93,10 +97,10 @@ const filteredTransactions = transactions.filter((transaction) => {
                             <tr>
                                 <th>Order ID</th>
                                 <th>Supplier</th>
-                                <th>Product</th>
+                                <th>Product ID</th>
                                 <th>Quantity</th>
-                                <th>Date</th>
-                                <th>Total Cost</th>
+                                <th>Order Date</th>
+                                <th>Delivery Date</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -104,17 +108,11 @@ const filteredTransactions = transactions.filter((transaction) => {
                             {filteredTransactions.map((transaction) => (
                                 <tr key={transaction.id}>
                                     <td>{transaction.id}</td>
-                                    <td>{transaction.supplier}</td>
-                                    <td>{transaction.product}</td>
+                                    <td>{transaction.supplier?.name || 'Unknown'}</td>
+                                    <td>{transaction.product_id}</td>
                                     <td>{transaction.quantity}</td>
-                                    <td>{transaction.orderDate}</td>
-                                    <td>
-                                        {transaction.cost !== null &&
-                                        transaction.cost !== undefined &&
-                                        transaction.cost !== "" 
-                                            ? `KES ${Number(transaction.cost).toLocaleString()}`
-                                            : '-'}
-                                    </td>
+                                    <td>{transaction.date_of_order}</td>
+                                    <td>{transaction.date_of_delivery || '-'}</td>
                                     <td>{transaction.status}</td>
                                 </tr>
                             ))}
