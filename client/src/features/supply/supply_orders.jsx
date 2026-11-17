@@ -7,6 +7,7 @@ function SupplyOrders() {
     const [suppliers, setSuppliers] = useState([])
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
+    const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState('')
 
     //Fetch suppliers
@@ -95,6 +96,7 @@ function SupplyOrders() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        setSubmitting(true)
 
         try {
             const token = localStorage.getItem('token')
@@ -131,6 +133,8 @@ function SupplyOrders() {
             setError('')
         } catch (error) {
             setError(error.message)
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -220,7 +224,7 @@ function SupplyOrders() {
                     required
                 />
 
-                <button type="submit">Create Order</button>
+                <button type="submit" disabled={submitting}>{submitting ? 'Creating...' : 'Create Order'}</button>
             </form>
 
             <div className="orders-list">
