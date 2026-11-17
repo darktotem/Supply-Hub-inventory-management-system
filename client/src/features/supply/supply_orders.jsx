@@ -110,14 +110,20 @@ function SupplyOrders() {
             <form onSubmit={handleSubmit} className="order-form">
                 <h3>Create Supply Order</h3>
 
-                <input
-                    type="text"
-                    name="supplier"
-                    placeholder="Supplier Name"
-                    value={formData.supplier}
+                <select
+                    name="supplier_id"
+                    value={formData.supplier_id}
                     onChange={handleChange}
                     required
-                />
+                >
+                    <option value="">Select Supplier</option>
+                    {suppliers.map((supplier) => (
+                        <option key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                        </option>
+                    ))}
+
+                </select>
 
                 <input
                     type="text"
