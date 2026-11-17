@@ -4,12 +4,14 @@ const API_URL = 'http://127.0.0.1:5000'
 
 function History() {
 
+    //Component state
     const [transactions, setTransactions] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState('All')
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
 
+    //Get supply history
     const fetchHistory = async () => {
         try {
             const token = localStorage.getItem('token')
@@ -23,7 +25,7 @@ function History() {
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.message || 'Failed to fetch supply history.')
+                throw new Error(data.error ||data.message || 'Failed to fetch supply history.')
             }
 
             setTransactions(data)
@@ -34,11 +36,12 @@ function History() {
         }
     }
 
+    //Load history on component mount
     useEffect(() => {
         fetchHistory()
     }, [])
 
-   
+//Filter displayed records
 const filteredTransactions = transactions.filter((transaction) => {
     const search = searchTerm.toLowerCase()
 
@@ -76,7 +79,6 @@ const filteredTransactions = transactions.filter((transaction) => {
                 >
                     <option value="All">All Statuses</option>
                     <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
                     <option value="Cancelled">Cancelled</option>
                     <option value ="Delivered">Delivered</option>
                 </select>
