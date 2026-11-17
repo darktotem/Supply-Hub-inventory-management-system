@@ -152,8 +152,8 @@ function SupplyOrders() {
 
                 <input
                     type="date"
-                    name="orderDate"
-                    value={formData.orderDate}
+                    name="date_of_order"
+                    value={formData.date_of_order}
                     onChange={handleChange}
                     required
                 />
