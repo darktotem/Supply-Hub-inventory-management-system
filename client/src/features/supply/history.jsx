@@ -1,8 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-function History({ transactions = [] }) {
+const API_URL = 'http://127.0.0.1:5000'
+
+function History() {
+
+    const [transactions, setTransactions] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState('All')
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
+
+
+
 
     const filteredTransactions = transactions.filter((transaction) => {
         const search = searchTerm.toLowerCase()
