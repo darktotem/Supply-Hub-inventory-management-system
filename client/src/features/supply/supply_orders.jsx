@@ -47,7 +47,7 @@ function SupplyOrders() {
         }
     }
 
-    //Load suppliers and products on mount
+    //Load suppliers and products on component mount
     useEffect(() => {
         fetchSuppliers()
         fetchProducts()
