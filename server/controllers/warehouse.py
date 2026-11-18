@@ -12,7 +12,7 @@ from schemas.warehouse_schema import (
     warehouse_product_schema,
     warehouse_product_update_schema,
 )
-from utils.decorators import current_user, login_required, roles_required
+from utils.decorators import login_required, roles_required
 
 warehouse_bp = Blueprint("warehouse", __name__)
 
@@ -38,10 +38,6 @@ def warehouse_products():
         products = Inventory.query.order_by(Inventory.product_name.asc()).all()
         return jsonify([_inventory_to_dict(item) for item in products]), 200
 
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
-
     data = request.get_json(silent=True)
     if data is None:
         return jsonify({"error": "Request body is required"}), 400
@@ -64,11 +60,8 @@ def warehouse_products():
 @warehouse_bp.route("/products/<int:item_id>", methods=["PATCH"])
 @warehouse_bp.route("/api/products/<int:item_id>", methods=["PATCH"])
 @login_required
+@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
 def update_warehouse_product(item_id):
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
-
     item = db.session.get(Inventory, item_id)
     if item is None:
         return jsonify({"error": "Inventory item not found"}), 404
@@ -104,11 +97,8 @@ def warehouse_deliveries():
 @warehouse_bp.route("/deliveries/<int:order_id>/deliver", methods=["PATCH", "POST"])
 @warehouse_bp.route("/api/deliveries/<int:order_id>/deliver", methods=["PATCH", "POST"])
 @login_required
+@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
 def mark_delivery(order_id):
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
-
     order = db.session.get(SupplyHistory, order_id)
     if order is None:
         return jsonify({"error": "Supply order not found"}), 404
@@ -147,11 +137,8 @@ def warehouse_reports():
 @warehouse_bp.route("/reports", methods=["POST"])
 @warehouse_bp.route("/api/reports", methods=["POST"])
 @login_required
+@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
 def save_warehouse_report():
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
-
     report = Report.create_inventory_report()
     db.session.add(report)
     db.session.commit()
