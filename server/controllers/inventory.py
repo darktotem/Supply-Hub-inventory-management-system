@@ -12,6 +12,29 @@ inventory_bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 
 @inventory_bp.post("")
 def create_inventory():
+    """
+    Create an inventory item
+    ---
+    tags:
+      - Inventory
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            product_name: {type: string}
+            category: {type: string}
+            quantity: {type: integer}
+            threshold: {type: integer}
+            price: {type: number}
+    responses:
+      201:
+        description: Item created
+      400:
+        description: Validation error
+    """
     data = request.get_json(silent=True)
  
     if data is None:
@@ -32,6 +55,15 @@ def create_inventory():
 
 @inventory_bp.get("")
 def get_inventory():
+    """
+    List all inventory items
+    ---
+    tags:
+      - Inventory
+    responses:
+      200:
+        description: List of items
+    """
     inventory = Inventory.query.all()
  
     return jsonify(inventory_schema.dump(inventory, many=True)), 200
@@ -39,6 +71,22 @@ def get_inventory():
  
 @inventory_bp.get("/<int:item_id>")
 def get_inventory_item(item_id):
+    """
+    Get one inventory item
+    ---
+    tags:
+      - Inventory
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: The item
+      404:
+        description: Not found
+    """
     item = db.session.get(Inventory, item_id)
  
     if not item:
@@ -49,6 +97,33 @@ def get_inventory_item(item_id):
  
 @inventory_bp.put("/<int:item_id>")
 def update_inventory(item_id):
+    """
+    Update an inventory item
+    ---
+    tags:
+      - Inventory
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            product_name: {type: string}
+            category: {type: string}
+            quantity: {type: integer}
+            threshold: {type: integer}
+            price: {type: number}
+    responses:
+      200:
+        description: Item updated
+      404:
+        description: Not found
+    """
     item = db.session.get(Inventory, item_id)
  
     if not item:
@@ -74,6 +149,22 @@ def update_inventory(item_id):
  
 @inventory_bp.delete("/<int:item_id>")
 def delete_inventory(item_id):
+    """
+    Delete an inventory item
+    ---
+    tags:
+      - Inventory
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Item deleted
+      404:
+        description: Not found
+    """
     item = db.session.get(Inventory, item_id)
  
     if not item:
@@ -87,6 +178,15 @@ def delete_inventory(item_id):
  
 @inventory_bp.get("/low-stock")
 def get_low_stock():
+    """
+    List items at or below their stock threshold
+    ---
+    tags:
+      - Inventory
+    responses:
+      200:
+        description: Low-stock items
+    """
     inventory = Inventory.query.filter(
         Inventory.quantity <= Inventory.threshold
     ).all()
@@ -96,6 +196,24 @@ def get_low_stock():
  
 @inventory_bp.post("/search")
 def search_inventory():
+    """
+    Search inventory by product name
+    ---
+    tags:
+      - Inventory
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [product_name]
+          properties:
+            product_name: {type: string}
+    responses:
+      200:
+        description: Matching items
+    """
     data = request.get_json(silent=True)
  
     if data is None:
