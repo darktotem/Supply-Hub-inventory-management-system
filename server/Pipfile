@@ -18,7 +18,7 @@ PyJWT = "*"
 email-validator = "*"
 pytest = "*"
 gunicorn = "*"
-psycopg2-binary = "*"
+psycopg-binary = "*"
 
 [dev-packages]
 pytest = "*"
