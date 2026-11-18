@@ -3,14 +3,22 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').r
   '',
 )
 
+/**
+ * @typedef {Omit<RequestInit, 'body'> & { body?: unknown }} WarehouseRequestOptions
+ */
+
+/**
+ * @param {string} path
+ * @param {WarehouseRequestOptions} [options={}]
+ */
 export async function warehouseRequest(path, options = {}) {
   const { body, ...requestOptions } = options
+  const headers = new Headers(requestOptions.headers)
+  if (body !== undefined) headers.set('Content-Type', 'application/json')
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...requestOptions,
-    headers: body === undefined ? requestOptions.headers : {
-      ...requestOptions.headers,
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   const data = await response.json()
