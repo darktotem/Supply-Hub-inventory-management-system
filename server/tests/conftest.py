@@ -1,50 +1,198 @@
+
 import pytest
-from flask import Flask
+from pathlib import Path
+
+from app import app as flask_app
 from extensions import db
-from models.customer import Customer
-from models.customer_history import CustomerHistory
-from models.inventory import Inventory
-from controllers.sales import sales_bp
+
+from models.supplier import Supplier
+from models.supply_history import SupplyHistory
+from models.user import Role
 
 
-@pytest.fixture
-def app():
-    # A small test app with a temporary in-memory database
-    app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["TESTING"] = True
-    db.init_app(app)
-    app.register_blueprint(sales_bp)
+from models import (
+    Customer,
+    Inventory,
+    CustomerHistory,
+    Invoice,
+)
+from models.user import User, Role
+from utils.tokens import create_token
 
+flask_app.config.update(
+    TESTING=True,
+    SQLALCHEMY_DATABASE_URI=f"sqlite:///inventory.db",
+    SECRET_KEY="test-secret-key-with-at-least-32-bytes",
+    JWT_SECRET_KEY="test-jwt-secret-with-at-least-32-bytes"
+)
+
+# --------------------------------------------------
+# APPLICATION FIXTURES
+# --------------------------------------------------
+
+@pytest.fixture(scope="session")
+def app(tmp_path_factory):
+    test_db = tmp_path_factory.mktemp("test_db") / "test_inventory.db"
+
+    flask_app.config.update(
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI=f"sqlite:///{test_db}",
+        SECRET_KEY="test-secret-key",
+        JWT_SECRET_KEY="test-jwt-secret",
+    )
+
+    yield flask_app
+
+
+@pytest.fixture()
+def procurement_user(user_factory):
+    return user_factory(
+        role=Role.PROCUREMENT,
+        username="procurement_user"
+    )
+
+
+@pytest.fixture()
+def database(app):
     with app.app_context():
+        db.drop_all()
         db.create_all()
-        yield app
+
+        yield db
+
         db.session.remove()
         db.drop_all()
 
 
-@pytest.fixture
-def client(app):
+@pytest.fixture()
+def client(app, database):
     return app.test_client()
 
 
-@pytest.fixture
-def customer(app):
-    c = Customer(customer_name="Amina Wanjiru", contact="0712345678")
-    db.session.add(c)
-    db.session.commit()
-    return c
+# --------------------------------------------------
+# USER / AUTHENTICATION FIXTURES
+# --------------------------------------------------
+
+@pytest.fixture()
+def user_factory(database):
+    """Create users with valid password hashes and JWT tokens."""
+
+    def create_user(role=Role.SALES, username=None, is_active=True):
+        username = username or f"user_{role}"
+
+        user = User(
+            name="Test User",
+            username=username,
+            email=f"{username}@example.com",
+            role=role,
+            is_active=is_active,
+        )
+
+        user.set_password("TestPassword123!")
+
+        database.session.add(user)
+        database.session.commit()
+
+        token = create_token(user)
+
+        return {
+            "user": user,
+            "token": token,
+            "headers": {
+                "Authorization": f"Bearer {token}"
+            },
+        }
+
+    return create_user
 
 
-@pytest.fixture
-def product(app):
-    p = Inventory(
-        product_name="Rice 2kg",
-        category="Food",
-        quantity=10,
-        threshold=2,
-        price=350,
+@pytest.fixture()
+def sales_user(user_factory):
+    return user_factory(
+        role=Role.SALES,
+        username="sales_user"
     )
-    db.session.add(p)
-    db.session.commit()
-    return p
+
+
+@pytest.fixture()
+def operations_user(user_factory):
+    return user_factory(
+        role=Role.OPERATIONS_DIRECTOR,
+        username="operations_user"
+    )
+
+
+@pytest.fixture()
+def it_admin_user(user_factory):
+    return user_factory(
+        role=Role.IT_ADMIN,
+        username="it_admin"
+    )
+
+
+@pytest.fixture()
+def inactive_sales_user(user_factory):
+    return user_factory(
+        role=Role.SALES,
+        username="inactive_sales",
+        is_active=False
+    )
+
+
+# --------------------------------------------------
+# SALES DATA FIXTURES
+# --------------------------------------------------
+
+@pytest.fixture()
+def sales_data(database):
+    customer = Customer(
+        customer_name="John Doe",
+        contact="0712345678",
+    )
+
+    product = Inventory(
+        product_name="Laptop",
+        category="Electronics",
+        quantity=50,
+        threshold=5,
+        price=100.00,
+    )
+
+    database.session.add_all([customer, product])
+    database.session.flush()
+
+    sale = CustomerHistory(
+        customer_id=customer.id,
+        product_id=product.id,
+        quantity=10,
+        total_price=1000.00,
+        status="pending",
+    )
+
+    database.session.add(sale)
+    database.session.commit()
+
+    return {
+        "customer": customer,
+        "product": product,
+        "sale": sale,
+    }
+
+
+@pytest.fixture()
+def invoice(database, sales_data):
+    sale = sales_data["sale"]
+
+    invoice = Invoice(
+        customer_id=sales_data["customer"].id,
+        product_id=sales_data["product"].id,
+        sale_id=sale.id,
+        quantity=2,
+        unit_price=100.00,
+        total=200.00,
+    )
+
+    database.session.add(invoice)
+    database.session.commit()
+
+    return invoice
