@@ -1,6 +1,19 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from config import Config
 from extensions import db, migrate, bcrypt
+from flasgger import Swagger
+
+# Import Models
+from models import Inventory, Invoice, Supplier, SupplyHistory, AuditLog, Customer, CustomerHistory, User, Payment
+
+# Import decorators
+from controllers.auth import auth_bp  
+from controllers.supply import supply_bp  
+from controllers.invoice import invoice_bp
+from controllers.sales import sales_bp
+from controllers.warehouse import warehouse_bp
+from controllers.inventory import inventory_bp
+from controllers.audit import audit_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -8,6 +21,26 @@ app.config.from_object(Config)
 db.init_app(app)
 migrate.init_app(app, db)
 bcrypt.init_app(app)
+swagger = Swagger(app)
+
+@app.route
+def colors(palette):
+    """
+    Get a list of colors based on the chosen palette.
+    ---
+    parameters:
+      - name: palette
+        in: path
+        type: string
+        required: true
+        description: The name of the palette (e.g., pastel, neon)
+    responses:
+      200:
+        description: A list of colors
+    """
+    if palette == 'pastel':
+        return jsonify(['lavender', 'mint', 'peach'])
+    return jsonify(['black', 'white'])
 
 
 @app.after_request
@@ -22,22 +55,24 @@ def add_cors_headers(response):
         response.headers["Vary"] = "Origin"
     return response
 
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Route not found"}), 404
 
-import models  # noqa: E402,F401  (so migrations see all models)
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Internal server error"}), 500
 
-
-# from utils.errors import register_error_handlers  # noqa: E402
-# register_error_handlers(app)
-
-# Controller files go LAST. Each one does `from app import app`.
-import controllers.inventory   # noqa: E402,F401
-import controllers.warehouse  # noqa: E402,F401
-from controllers.auth import auth_bp  # noqa: E402
-from controllers.supply import supply_bp  # noqa: E402
-
+# Register decorators
+app.register_blueprint(inventory_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(supply_bp)
-app.register_blueprint(controllers.warehouse.warehouse_bp)
+app.register_blueprint(invoice_bp)
+app.register_blueprint(sales_bp)
+app.register_blueprint(warehouse_bp)
+app.register_blueprint(audit_bp)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

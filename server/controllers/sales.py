@@ -5,6 +5,10 @@ from models.customer import Customer
 from models.customer_history import CustomerHistory
 from models.inventory import Inventory
 from schemas.sales_schema import CustomerSchema, OrderSchema
+=======
+from models.user import Role
+from schemas.sales_schema import CustomerSchema, OrderSchema
+from utils.decorators import login_required, roles_required
 
 sales_bp = Blueprint("sales", __name__)
 
@@ -19,12 +23,55 @@ order_schema = OrderSchema()
 
 @sales_bp.get("/api/customers")
 def get_customers():
+=======
+
+@sales_bp.get("/api/customers")
+@login_required
+def get_customers():
+    """
+    List customers
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: List of customers
+    """
     customers = Customer.query.all()
     return jsonify([c.to_dict() for c in customers]), 200
 
 
 @sales_bp.post("/api/register_customer")
 def register_customer():
+=======
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
+def register_customer():
+    """
+    Register a new customer
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [customer_name, contact]
+          properties:
+            customer_name: {type: string}
+            contact: {type: string}
+    responses:
+      201:
+        description: Customer created
+      400:
+        description: Validation error
+    """
     try:
         data = customer_schema.load(request.get_json())
     except ValidationError as err:
@@ -41,6 +88,28 @@ def register_customer():
 
 @sales_bp.delete("/api/delete_customer/<int:id>")
 def delete_customer(id):
+=======
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
+def delete_customer(id):
+    """
+    Delete a customer (Sales, Operations Director)
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Customer deleted
+      404:
+        description: Not found
+    """
     customer = db.session.get(Customer, id)
     if not customer:
         return jsonify({"error": "Customer not found"}), 404
@@ -58,6 +127,22 @@ def delete_customer(id):
 
 @sales_bp.get("/api/customer_orders")
 def get_customer_orders():
+=======
+
+@sales_bp.get("/api/customer_orders")
+@login_required
+def get_customer_orders():
+    """
+    List customer orders
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: List of orders
+    """
     orders = CustomerHistory.query.order_by(CustomerHistory.id.desc()).all()
     return jsonify([o.to_dict() for o in orders]), 200
 
@@ -65,6 +150,20 @@ def get_customer_orders():
 @sales_bp.get("/api/customer_history")
 def get_customer_history():
     # History = orders that are finished (fulfilled or cancelled), newest first
+=======
+@login_required
+def get_customer_history():
+    """
+    List customer order history
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Order history
+    """
     history = (
         CustomerHistory.query
         .filter(CustomerHistory.status != "pending")
@@ -76,6 +175,34 @@ def get_customer_history():
 
 @sales_bp.post("/api/post_customer_orders")
 def post_customer_order():
+=======
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
+def post_customer_order():
+    """
+    Create a customer order (Sales, Operations Director)
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [customer_id, product_id, quantity]
+          properties:
+            customer_id: {type: integer}
+            product_id: {type: integer}
+            quantity: {type: integer}
+    responses:
+      201:
+        description: Order created
+      400:
+        description: Validation error or insufficient stock
+    """
     try:
         data = order_schema.load(request.get_json())
     except ValidationError as err:
@@ -107,6 +234,28 @@ def post_customer_order():
 
 @sales_bp.patch("/api/cancel_customer_order/<int:id>")
 def cancel_customer_order(id):
+=======
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
+def cancel_customer_order(id):
+    """
+    Cancel a customer order (Sales, Operations Director)
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Order cancelled
+      404:
+        description: Not found
+    """
     order = db.session.get(CustomerHistory, id)
     if not order:
         return jsonify({"error": "Order not found"}), 404
@@ -121,6 +270,28 @@ def cancel_customer_order(id):
 
 @sales_bp.patch("/api/fulfil_customer_order/<int:id>")
 def fulfil_customer_order(id):
+=======
+@login_required
+@roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
+def fulfil_customer_order(id):
+    """
+    Fulfil a customer order (Sales, Operations Director)
+    ---
+    tags:
+      - Sales
+    security:
+      - Bearer: []
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Order fulfilled
+      404:
+        description: Not found
+    """
     order = db.session.get(CustomerHistory, id)
     if not order:
         return jsonify({"error": "Order not found"}), 404

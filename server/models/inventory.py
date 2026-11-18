@@ -1,4 +1,3 @@
-
 from extensions import db
 
 
@@ -11,3 +10,5 @@ class Inventory(db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=0)
     threshold = db.Column(db.Integer, nullable=False, default=10)
     price = db.Column(db.Float, nullable=False)
+
+    invoices = db.relationship("Invoice", back_populates="product")

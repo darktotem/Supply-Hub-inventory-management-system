@@ -2,21 +2,34 @@ from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
 from extensions import db
+from models.inventory import Inventory
 from models.supplier import Supplier
 from models.supply_history import SupplyHistory
-from models.inventory import Inventory
+from models.user import Role
 from schemas.supply_schema import (
     supply_schema,
     supply_order_schema,
     cancel_order_status_schema,
     supply_history_schema
 )
+from utils.decorators import login_required, roles_required
 
 supply_bp = Blueprint("supply", __name__)
 
-#View all supply history
 @supply_bp.route("/supplyhistory", methods=["GET"])
+@login_required
 def get_supply_history():
+    """
+    List supply history
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Supply orders
+    """
     supply_history = SupplyHistory.query.all()
     result = supply_history_schema.dump(supply_history)
 
@@ -24,7 +37,34 @@ def get_supply_history():
 
 #Register a new supplier
 @supply_bp.route("/register_supplier", methods=["POST"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def register_supplier():
+    """
+    Register a supplier (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name: {type: string}
+            contact_person: {type: string}
+            phone: {type: string}
+            email: {type: string}
+            address: {type: string}
+    responses:
+      201:
+        description: Supplier registered
+      400:
+        description: Validation error
+    """
     data = request.get_json(silent=True)
 
     if data is None:
@@ -57,7 +97,27 @@ def register_supplier():
 
 #Delete a supplier
 @supply_bp.route("/delete_suppliers/<int:supplier_id>", methods=["DELETE"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def delete_supplier(supplier_id):
+    """
+    Delete a supplier (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: supplier_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Supplier deleted
+      404:
+        description: Not found
+    """
     supplier = db.session.get(Supplier, supplier_id)
 
     if supplier is None:
@@ -77,7 +137,33 @@ def delete_supplier(supplier_id):
 
 #Create a new supply order
 @supply_bp.route("/supply_orders", methods=["POST"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def create_supply_order():
+    """
+    Create a supply order (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            product_id: {type: integer}
+            supplier_id: {type: integer}
+            quantity: {type: integer}
+            date_of_order: {type: string, format: date}
+    responses:
+      201:
+        description: Order created
+      404:
+        description: Product or supplier not found
+    """
     data = request.get_json(silent=True)
 
     if data is None:
@@ -112,7 +198,36 @@ def create_supply_order():
 
 #Cancel an order
 @supply_bp.route("/cancel_order/<int:order_id>", methods=["PATCH"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def cancel_order(order_id):
+    """
+    Cancel a pending supply order (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            status: {type: string, example: Cancelled}
+    responses:
+      200:
+        description: Order cancelled
+      400:
+        description: Order cannot be cancelled
+      404:
+        description: Not found
+    """
     data = request.get_json(silent=True)
 
     if data is None:
@@ -128,10 +243,10 @@ def cancel_order(order_id):
     if supply_order is None:
         return jsonify({"error": "Supply order not found"}), 404
 
-    if supply_order.status in ["Delivered", "Cancelled"]:
+    if supply_order.status != "Pending":
         return jsonify({"error": "This order cannot be cancelled"}), 400
 
-    supply_order.status = validated_data["status"]
+    supply_order.status = "Cancelled"
     db.session.commit()
 
     return jsonify({"message": "Supply order cancelled successfully"}), 200
