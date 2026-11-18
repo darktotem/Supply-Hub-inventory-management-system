@@ -25,10 +25,12 @@ class Invoice(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)    
     sale_id = db.Column(db.Integer, db.ForeignKey("customer_history.id"), nullable=True)
 
-    sale = db.relationship("CustomerHistory", back_populates="invoice")
-    customer = db.relationship("Customer", back_populates="invoice")
-    product = db.relationship("Inventory", back_populates="invoice")
+
+    sale = db.relationship("CustomerHistory", back_populates="invoices")
+    customer = db.relationship("Customer", back_populates="invoices")
+    product = db.relationship("Inventory", back_populates="invoices")
     payments = db.relationship("Payment", back_populates="invoice")
+
 
     __table_args__ = (
         db.CheckConstraint("quantity > 0", name="ck_invoice_quantity_positive"),
