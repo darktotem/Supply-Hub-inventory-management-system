@@ -42,7 +42,7 @@ function AddProduct() {
       setProduct(initialProduct)
       setMessage({ type: 'success', text: 'Product added to inventory.' })
     } catch (error) {
-      setMessage({ 
+      setMessage({
         type: 'error',
         text: error instanceof Error ? error.message : 'Unable to add product.',
       })

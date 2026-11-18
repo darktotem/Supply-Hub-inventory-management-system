@@ -2,21 +2,52 @@ import { useCallback, useEffect, useState } from 'react'
 import './warehouse.css'
 import { warehouseRequest } from './warehouseApi.js'
 
+/**
+ * @typedef {{
+ *   id: number,
+ *   product_name: string,
+ *   category: string,
+ *   quantity: number,
+ *   threshold: number,
+ *   price: number
+ * }} InventoryItem
+ */
+
+/**
+ * @typedef {{
+ *   id: number | null,
+ *   report_type: string,
+ *   generated_at: string | null,
+ *   total_products: number,
+ *   total_quantity: number,
+ *   low_stock_count: number,
+ *   low_stock_items: InventoryItem[],
+ *   inventory: InventoryItem[]
+ * }} InventoryReport
+ */
+
+/** @param {unknown} error */
+function errorMessage(error) {
+  return error instanceof Error ? error.message : 'An unexpected error occurred.'
+}
+
+/** @param {string | null} value */
 function formatDate(value) {
   if (!value) return '—'
   return new Date(value).toLocaleString()
 }
 
+/** @param {number | null | undefined} value */
 function formatPrice(value) {
-  return Number(value || 0).toLocaleString(undefined, {
+  return (value ?? 0).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
 }
 
 function Reports() {
-  const [report, setReport] = useState(null)
-  const [history, setHistory] = useState([])
+  const [report, setReport] = useState(/** @type {InventoryReport | null} */ (null))
+  const [history, setHistory] = useState(/** @type {InventoryReport[]} */ ([]))
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -33,7 +64,7 @@ function Reports() {
       setReport(currentReport)
       setHistory(reportHistory)
     } catch (loadError) {
-      setError(loadError.message)
+      setError(errorMessage(loadError))
     } finally {
       setIsLoading(false)
     }
@@ -52,7 +83,7 @@ function Reports() {
         }
       })
       .catch((loadError) => {
-        if (isActive) setError(loadError.message)
+        if (isActive) setError(errorMessage(loadError))
       })
       .finally(() => {
         if (isActive) setIsLoading(false)
@@ -72,7 +103,7 @@ function Reports() {
       setHistory((current) => [savedReport, ...current])
       setNotice('Inventory report saved.')
     } catch (saveError) {
-      setError(saveError.message)
+      setError(errorMessage(saveError))
     } finally {
       setIsSaving(false)
     }
