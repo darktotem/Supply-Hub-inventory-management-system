@@ -20,6 +20,17 @@ supply_bp = Blueprint("supply", __name__)
 @supply_bp.route("/supplyhistory", methods=["GET"])
 @login_required
 def get_supply_history():
+    """
+    List supply history
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Supply orders
+    """
     supply_history = SupplyHistory.query.all()
     result = supply_history_schema.dump(supply_history)
 
@@ -39,6 +50,31 @@ def get_suppliers():
 @login_required
 @roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def register_supplier():
+    """
+    Register a supplier (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name: {type: string}
+            contact_person: {type: string}
+            phone: {type: string}
+            email: {type: string}
+            address: {type: string}
+    responses:
+      201:
+        description: Supplier registered
+      400:
+        description: Validation error
+    """
     data = request.get_json(silent=True)
 
     if data is None:
@@ -74,6 +110,24 @@ def register_supplier():
 @login_required
 @roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def delete_supplier(supplier_id):
+    """
+    Delete a supplier (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: supplier_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Supplier deleted
+      404:
+        description: Not found
+    """
     supplier = db.session.get(Supplier, supplier_id)
 
     if supplier is None:
@@ -96,6 +150,30 @@ def delete_supplier(supplier_id):
 @login_required
 @roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def create_supply_order():
+    """
+    Create a supply order (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            product_id: {type: integer}
+            supplier_id: {type: integer}
+            quantity: {type: integer}
+            date_of_order: {type: string, format: date}
+    responses:
+      201:
+        description: Order created
+      404:
+        description: Product or supplier not found
+    """
     data = request.get_json(silent=True)
 
     if data is None:
@@ -133,6 +211,33 @@ def create_supply_order():
 @login_required
 @roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
 def cancel_order(order_id):
+    """
+    Cancel a pending supply order (Procurement, Operations Director)
+    ---
+    tags:
+      - Supply
+    security:
+      - Bearer: []
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            status: {type: string, example: Cancelled}
+    responses:
+      200:
+        description: Order cancelled
+      400:
+        description: Order cannot be cancelled
+      404:
+        description: Not found
+    """
     data = request.get_json(silent=True)
 
     if data is None:

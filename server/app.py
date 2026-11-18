@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from config import Config
 from extensions import db, migrate, bcrypt
+from flasgger import Swagger
 
 # Import Models
 from models import Inventory, Invoice, Supplier, SupplyHistory, AuditLog, Customer, CustomerHistory, User, Payment
@@ -20,6 +21,26 @@ app.config.from_object(Config)
 db.init_app(app)
 migrate.init_app(app, db)
 bcrypt.init_app(app)
+swagger = Swagger(app)
+
+@app.route
+def colors(palette):
+    """
+    Get a list of colors based on the chosen palette.
+    ---
+    parameters:
+      - name: palette
+        in: path
+        type: string
+        required: true
+        description: The name of the palette (e.g., pastel, neon)
+    responses:
+      200:
+        description: A list of colors
+    """
+    if palette == 'pastel':
+        return jsonify(['lavender', 'mint', 'peach'])
+    return jsonify(['black', 'white'])
 
 
 @app.after_request

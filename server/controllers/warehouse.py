@@ -12,7 +12,7 @@ from schemas.warehouse_schema import (
     warehouse_product_schema,
     warehouse_product_update_schema,
 )
-from utils.decorators import current_user, login_required, roles_required
+from utils.decorators import login_required, roles_required
 
 warehouse_bp = Blueprint("warehouse", __name__)
 
@@ -34,13 +34,35 @@ def _inventory_to_dict(item):
 @warehouse_bp.route("/api/products", methods=["GET", "POST"])
 @login_required
 def warehouse_products():
+    """
+    GET: list products. POST: create a product.
+    ---
+    tags:
+      - Warehouse
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: Only for POST
+        schema:
+          type: object
+          properties:
+            product_name: {type: string}
+            category: {type: string}
+            quantity: {type: integer}
+            threshold: {type: integer}
+            price: {type: number}
+    responses:
+      200:
+        description: List of products (GET)
+      201:
+        description: Product created (POST)
+    """
     if request.method == "GET":
         products = Inventory.query.order_by(Inventory.product_name.asc()).all()
         return jsonify([_inventory_to_dict(item) for item in products]), 200
-
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
 
     data = request.get_json(silent=True)
     if data is None:
@@ -64,11 +86,37 @@ def warehouse_products():
 @warehouse_bp.route("/products/<int:item_id>", methods=["PATCH"])
 @warehouse_bp.route("/api/products/<int:item_id>", methods=["PATCH"])
 @login_required
+@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
 def update_warehouse_product(item_id):
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
-
+    """
+    Update a product (Store Worker, Operations Director)
+    ---
+    tags:
+      - Warehouse
+    security:
+      - Bearer: []
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            product_name: {type: string}
+            category: {type: string}
+            quantity: {type: integer}
+            threshold: {type: integer}
+            price: {type: number}
+    responses:
+      200:
+        description: Product updated
+      404:
+        description: Not found
+    """
     item = db.session.get(Inventory, item_id)
     if item is None:
         return jsonify({"error": "Inventory item not found"}), 404
@@ -95,6 +143,17 @@ def update_warehouse_product(item_id):
 @warehouse_bp.route("/api/deliveries", methods=["GET"])
 @login_required
 def warehouse_deliveries():
+    """
+    List deliveries (supply orders)
+    ---
+    tags:
+      - Warehouse
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: List of deliveries
+    """
     orders = SupplyHistory.query.order_by(SupplyHistory.date_of_order.desc()).all()
     return jsonify([order.to_dict() for order in orders]), 200
 
@@ -104,11 +163,28 @@ def warehouse_deliveries():
 @warehouse_bp.route("/deliveries/<int:order_id>/deliver", methods=["PATCH", "POST"])
 @warehouse_bp.route("/api/deliveries/<int:order_id>/deliver", methods=["PATCH", "POST"])
 @login_required
+@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
 def mark_delivery(order_id):
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
-
+    """
+    Mark a delivery as delivered (Store Worker, Operations Director)
+    ---
+    tags:
+      - Warehouse
+    security:
+      - Bearer: []
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Delivery marked as delivered
+      400:
+        description: Already delivered or cancelled
+      404:
+        description: Not found
+    """
     order = db.session.get(SupplyHistory, order_id)
     if order is None:
         return jsonify({"error": "Supply order not found"}), 404
@@ -138,6 +214,17 @@ def mark_delivery(order_id):
 @warehouse_bp.route("/api/reports", methods=["GET"])
 @login_required
 def warehouse_reports():
+    """
+    Generate a live inventory report
+    ---
+    tags:
+      - Warehouse
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Inventory report
+    """
     report = Report.create_inventory_report()
     return jsonify(report.to_dict()), 200
 
@@ -147,11 +234,19 @@ def warehouse_reports():
 @warehouse_bp.route("/reports", methods=["POST"])
 @warehouse_bp.route("/api/reports", methods=["POST"])
 @login_required
+@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
 def save_warehouse_report():
-    user = current_user()
-    if user is None or user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
-        return {"error": "You do not have permission to access this resource"}, 403
-
+    """
+    Save an inventory report (Store Worker, Operations Director)
+    ---
+    tags:
+      - Warehouse
+    security:
+      - Bearer: []
+    responses:
+      201:
+        description: Report saved
+    """
     report = Report.create_inventory_report()
     db.session.add(report)
     db.session.commit()
@@ -164,5 +259,16 @@ def save_warehouse_report():
 @warehouse_bp.route("/api/reports/history", methods=["GET"])
 @login_required
 def warehouse_report_history():
+    """
+    List saved inventory reports
+    ---
+    tags:
+      - Warehouse
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Report history
+    """
     reports = Report.query.order_by(Report.generated_at.desc(), Report.id.desc()).all()
     return jsonify([report.to_dict() for report in reports]), 200

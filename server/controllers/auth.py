@@ -13,6 +13,27 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.post("/api/login")
 def login():
+    """
+    Log in
+    ---
+    tags:
+      - Auth
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [username, password]
+          properties:
+            username: {type: string}
+            password: {type: string}
+    responses:
+      200:
+        description: Login successful, returns token
+      401:
+        description: Invalid credentials
+    """
     data, err = load_json(LoginSchema)
     if err:
         return err
@@ -29,6 +50,29 @@ def login():
 @auth_bp.patch("/api/change_password")
 @login_required
 def change_password():
+    """
+    Change own password
+    ---
+    tags:
+      - Auth
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [old_password, new_password]
+          properties:
+            old_password: {type: string}
+            new_password: {type: string}
+    responses:
+      200:
+        description: Password changed
+      400:
+        description: Wrong current password or invalid input
+    """
     data, err = load_json(ChangePasswordSchema)
     if err:
         return err
@@ -50,6 +94,29 @@ def change_password():
 @auth_bp.patch("/api/change_username")
 @login_required
 def change_username():
+    """
+    Change own username
+    ---
+    tags:
+      - Auth
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [username, password]
+          properties:
+            username: {type: string}
+            password: {type: string}
+    responses:
+      200:
+        description: Username changed
+      400:
+        description: Wrong password or invalid input
+    """
     data, err = load_json(ChangeUsernameSchema)
     if err:
         return err
@@ -71,6 +138,27 @@ def change_username():
 
 @auth_bp.post("/api/verify_recovery_code")
 def verify_recovery_code():
+    """
+    Forgot password, step 2: verify recovery code
+    ---
+    tags:
+      - Auth
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [username, recovery_code]
+          properties:
+            username: {type: string}
+            recovery_code: {type: string}
+    responses:
+      200:
+        description: Code valid, returns reset token
+      400:
+        description: Invalid code
+    """
     """Public. Step 2 of forgot-password: check the code IT gave the employee."""
     data, err = load_json(VerifyRecoveryCodeSchema)
     if err:
@@ -92,6 +180,28 @@ def verify_recovery_code():
 
 @auth_bp.post("/api/set_new_password")
 def set_new_password():
+    """
+    Forgot password, step 3: set a new password
+    ---
+    tags:
+      - Auth
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [reset_token, new_password, confirm_password]
+          properties:
+            reset_token: {type: string}
+            new_password: {type: string}
+            confirm_password: {type: string}
+    responses:
+      200:
+        description: Password reset
+      400:
+        description: Invalid token or passwords do not match
+    """
     """Public. Step 3: the employee creates and confirms their own password."""
     data, err = load_json(SetNewPasswordSchema)
     if err:

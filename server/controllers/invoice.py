@@ -19,12 +19,46 @@ invoice_bp = Blueprint("invoice", __name__, url_prefix="/invoices")
 
 @invoice_bp.route("/", methods=["GET"])
 def get_invoices():
+    """
+    List invoices
+    ---
+    tags:
+      - Invoices
+    responses:
+      200:
+        description: List of invoices
+    """
     invoices = Invoice.query.all()
     return jsonify(invoices_schema.dump(invoices)), 200
 
 
 @invoice_bp.route("/", methods=["POST"], strict_slashes=False)
 def create_invoice():
+    """
+    Create an invoice for a sale
+    ---
+    tags:
+      - Invoices
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [customer_id, product_id, sale_id, unit_price, quantity]
+          properties:
+            customer_id: {type: integer}
+            product_id: {type: integer}
+            sale_id: {type: integer}
+            unit_price: {type: string, example: "100.00"}
+            quantity: {type: integer}
+            total: {type: string, example: "100.00"}
+    responses:
+      201:
+        description: Invoice created
+      400:
+        description: Validation error
+    """
     payload = request.get_json(silent=True)
     if payload is None:
         return jsonify({"error": "Request body must be valid JSON"}), 400
@@ -91,6 +125,22 @@ def create_invoice():
 
 @invoice_bp.route("/<int:invoice_id>/payments", methods=["GET"])
 def get_payments(invoice_id):
+    """
+    List payments for an invoice
+    ---
+    tags:
+      - Invoices
+    parameters:
+      - name: invoice_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: List of payments
+      404:
+        description: Invoice not found
+    """
     invoice = db.session.get(Invoice, invoice_id)
     if not invoice:
         return jsonify({"error": "Invoice not found"}), 404
@@ -99,6 +149,34 @@ def get_payments(invoice_id):
 
 @invoice_bp.route("/<int:invoice_id>/payments", methods=["POST"])
 def add_payment(invoice_id):
+    """
+    Add a payment to an invoice
+    ---
+    tags:
+      - Invoices
+    parameters:
+      - name: invoice_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [amount]
+          properties:
+            amount: {type: string, example: "50.00"}
+            method: {type: string, enum: [cash, mpesa, bank, card]}
+            reference: {type: string}
+    responses:
+      201:
+        description: Payment recorded
+      400:
+        description: Validation error
+      404:
+        description: Invoice not found
+    """
     payload = request.get_json(silent=True)
     if payload is None:
         return jsonify({"error": "Request body must be valid JSON"}), 400
