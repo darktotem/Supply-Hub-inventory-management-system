@@ -2,19 +2,39 @@ import { useCallback, useEffect, useState } from 'react'
 import './warehouse.css'
 import { warehouseRequest } from './warehouseApi.js'
 
+/**
+ * @typedef {{
+ *   id: number,
+ *   product_id: number,
+ *   supplier_id: number,
+ *   quantity: number,
+ *   date_of_order: string | null,
+ *   date_of_delivery: string | null,
+ *   status: string | null,
+ *   supplier?: { name?: string } | null
+ * }} Delivery
+ */
+
+/** @param {string | null} value */
 function formatDate(value) {
   if (!value) return '—'
   return new Date(`${value}T00:00:00`).toLocaleDateString()
 }
 
+/** @param {string | null} status */
 function statusClass(status) {
   return `status-badge--${(status || 'pending').toLowerCase()}`
 }
 
+/** @param {unknown} error */
+function errorMessage(error) {
+  return error instanceof Error ? error.message : 'An unexpected error occurred.'
+}
+
 function Deliveries() {
-  const [deliveries, setDeliveries] = useState([])
+  const [deliveries, setDeliveries] = useState(/** @type {Delivery[]} */ ([]))
   const [isLoading, setIsLoading] = useState(true)
-  const [activeDelivery, setActiveDelivery] = useState(null)
+  const [activeDelivery, setActiveDelivery] = useState(/** @type {number | null} */ (null))
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
@@ -25,7 +45,7 @@ function Deliveries() {
       const data = await warehouseRequest('/warehouse/deliveries')
       setDeliveries(data)
     } catch (loadError) {
-      setError(loadError.message)
+      setError(errorMessage(loadError))
     } finally {
       setIsLoading(false)
     }
@@ -38,7 +58,7 @@ function Deliveries() {
         if (isActive) setDeliveries(data)
       })
       .catch((loadError) => {
-        if (isActive) setError(loadError.message)
+        if (isActive) setError(errorMessage(loadError))
       })
       .finally(() => {
         if (isActive) setIsLoading(false)
@@ -49,6 +69,7 @@ function Deliveries() {
     }
   }, [])
 
+  /** @param {number} deliveryId */
   async function markDelivered(deliveryId) {
     setActiveDelivery(deliveryId)
     setError('')
@@ -60,7 +81,7 @@ function Deliveries() {
       setNotice('Delivery received and inventory updated.')
       await loadDeliveries()
     } catch (actionError) {
-      setError(actionError.message)
+      setError(errorMessage(actionError))
     } finally {
       setActiveDelivery(null)
     }

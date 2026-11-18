@@ -12,14 +12,18 @@ const initialProduct = {
 
 function AddProduct() {
   const [product, setProduct] = useState(initialProduct)
-  const [message, setMessage] = useState(null)
+  const [message, setMessage] = useState(
+    /** @type {{ type: 'success' | 'error', text: string } | null} */ (null),
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  /** @param {React.ChangeEvent<HTMLInputElement>} event */
   function handleChange(event) {
     const { name, value } = event.target
     setProduct((current) => ({ ...current, [name]: value }))
   }
 
+  /** @param {React.FormEvent<HTMLFormElement>} event */
   async function handleSubmit(event) {
     event.preventDefault()
     setMessage(null)
@@ -38,7 +42,10 @@ function AddProduct() {
       setProduct(initialProduct)
       setMessage({ type: 'success', text: 'Product added to inventory.' })
     } catch (error) {
-      setMessage({ type: 'error', text: error.message })
+      setMessage({ 
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Unable to add product.',
+      })
     } finally {
       setIsSubmitting(false)
     }
