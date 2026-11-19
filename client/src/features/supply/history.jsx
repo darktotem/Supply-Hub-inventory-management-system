@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-
-const API_URL = 'http://127.0.0.1:5000'
+import { api } from '../../api/client'
 
 function History() {
 
@@ -14,20 +13,7 @@ function History() {
     //Get supply history
     const fetchHistory = async () => {
         try {
-            const token = localStorage.getItem('token')
-            const response = await fetch(`${API_URL}/supplyhistory`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error ||data.message || 'Failed to fetch supply history.')
-            }
-
+            const data = await api('/supplyhistory')
             setTransactions(data)
         } catch (error) {
             setError(error.message)
