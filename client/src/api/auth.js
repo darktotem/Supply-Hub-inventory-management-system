@@ -44,6 +44,10 @@ export function saveSession(token, user) {
   localStorage.setItem("supply_hub_user", JSON.stringify(user));
 }
 
+export function getSavedToken() {
+  return localStorage.getItem("supply_hub_token");
+}
+
 export function getSavedUser() {
   try {
     return JSON.parse(localStorage.getItem("supply_hub_user"));
