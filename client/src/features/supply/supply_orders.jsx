@@ -127,22 +127,10 @@ function SupplyOrders() {
             setCancelling(true)
             setSuccess('')
 
-            const token = localStorage.getItem('token')
-
-            const response = await fetch(`${API_URL}/cancel_order/${id}`, {
+            await api(`/cancel_order/${id}`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify({ status: 'Cancelled' })
             })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || data.message || 'Failed to cancel order.')
-            }
 
            setOrders((previousOrders) =>
                 previousOrders.map((order) =>
