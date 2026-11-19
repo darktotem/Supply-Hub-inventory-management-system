@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-
-const API_URL = 'http://127.0.0.1:5000'
+import { api } from '../../api/client'
 
 function SupplyOrders() {
     const [orders, setOrders] = useState([])
@@ -15,19 +14,7 @@ function SupplyOrders() {
     //Fetch suppliers
     const fetchSuppliers = async () => {
         try {
-            const token = localStorage.getItem('token')
-            const response = await fetch(`${API_URL}/suppliers`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || data.message || 'Failed to fetch suppliers.')
-            }
-
+            const data = await api('/suppliers')
             setSuppliers(data)
         } catch (error) {
             setError((previousError) =>
@@ -41,13 +28,7 @@ function SupplyOrders() {
     // Fetch products
     const fetchProducts = async () => {
         try {
-            const response = await fetch(`${API_URL}/inventory`)
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || data.message || 'Failed to fetch products.')
-            }
-
+            const data = await api('/inventory')
             setProducts(data)
         } catch (error) {
             setError((previousError) =>
@@ -61,20 +42,7 @@ function SupplyOrders() {
     // Fetch existing supply orders
     const fetchOrders = async () => {
         try {
-            const token = localStorage.getItem('token')
-
-            const response = await fetch(`${API_URL}/supplyhistory`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || data.message || 'Failed to fetch supply orders.')
-            }
-
+            const data = await api('/supplyhistory')
             setOrders(data)
             return true 
 
