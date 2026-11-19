@@ -89,14 +89,8 @@ function SupplyOrders() {
         setError('')
 
         try {
-            const token = localStorage.getItem('token')
-
-            const response = await fetch(`${API_URL}/supply_orders`, {
+            await api('/supply_orders', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     supplier_id: Number(formData.supplier_id),
                     product_id: Number(formData.product_id),
@@ -104,16 +98,6 @@ function SupplyOrders() {
                     date_of_order: formData.date_of_order
                 })
             })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                const errorMessage = typeof data.error === 'object' && data.error !== null
-                    ? Object.values(data.error).map((message) => message.join(',')).join(',')
-                    : data.error || data.message || 'Failed to create supply order.'
-
-                throw new Error(errorMessage)
-            }
 
             const refreshed = await fetchOrders()
             if (refreshed) {
