@@ -1,6 +1,5 @@
 import { useState, useEffect} from 'react'
-
-const API_URL ='http://127.0.0.1:5000'
+import { api } from '../../api/client'
 
 function RegSuppliers() {
     const [suppliers, setSuppliers] = useState([])
@@ -13,26 +12,11 @@ function RegSuppliers() {
         address: ''
     })
 
-    const getToken = () => localStorage.getItem('token')
-
     //Fetch all registered suppliers
     const fetchSuppliers = async () => {
         try {
-            const response = await fetch(`${API_URL}/suppliers`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to fetch suppliers.')
-            }
-
+            const data = await api('/suppliers')
             setSuppliers(data)
-
         } catch (error) {
             console.error('Error fetching suppliers:', error)
             setMessage(error.message)
@@ -58,21 +42,11 @@ function RegSuppliers() {
         setMessage('')
 
         try {
-            const response = await fetch(`${API_URL}/register_supplier`, {
+            const data = await api('/register_supplier', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
-                },
                 body: JSON.stringify(formData)
             })
-            
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to register supplier.')
-            }
-            
+                 
             setSuppliers(prevSuppliers => [...prevSuppliers, data])
             setMessage('Supplier registered successfully.')
 
@@ -93,19 +67,10 @@ function RegSuppliers() {
         setMessage('')
 
         try {
-            const response = await fetch(`${API_URL}/delete_suppliers/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`
-                }
+            await api(`/delete_suppliers/${id}`,{
+                method: 'DELETE'
             })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to delete supplier.')
-            }
-
+           
             setSuppliers(prevSuppliers => prevSuppliers.filter(supplier => supplier.id !== id))
             setMessage('Supplier deleted successfully.')
         } catch (error) {
