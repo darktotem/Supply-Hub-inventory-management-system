@@ -13,17 +13,20 @@ const roles = [
 
 const emptyForm = { name: "", username: "", email: "", role: "sales_officer", password: "" };
 
+/** @typedef {{ id: number, name: string, username: string, email?: string | null, role: string, is_active: boolean }} Employee */
+
 export default function Employees() {
-  const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState(/** @type {Employee[]} */([]));
   const [form, setForm] = useState(emptyForm);
-  const [editing, setEditing] = useState(null);
+  const [editing, setEditing] = useState(/** @type {Employee | null} */(null));
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
   async function loadEmployees() {
     try {
+      /** @type {{ employees?: Employee[] } | Employee[]} */
       const data = await api("/api/employees");
-      setEmployees(data.employees || data);
+      setEmployees(Array.isArray(data) ? data : (data.employees || []));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load employees");
     }
@@ -65,13 +68,13 @@ export default function Employees() {
     }
   }
 
-  /** @param {{ id: number, name: string, username: string, email?: string, role: string, is_active: boolean }} employee */
+  /** @param {Employee} employee */
   function editEmployee(employee) {
     setEditing(employee);
     setForm({ name: employee.name, username: employee.username, email: employee.email || "", role: employee.role, password: "" });
   }
 
-  /** @param {{ id: number, name: string, username: string, email?: string, role: string, is_active: boolean }} employee
+  /** @param {Employee} employee
    *  @param {boolean} isActive
    */
   async function setAccess(employee, isActive) {
@@ -87,7 +90,7 @@ export default function Employees() {
     }
   }
 
-  /** @param {{ id: number, name: string, username: string, email?: string, role: string, is_active: boolean }} employee */
+  /** @param {Employee} employee */
   async function resetPassword(employee) {
     setError("");
     try {
@@ -98,7 +101,7 @@ export default function Employees() {
     }
   }
 
-  /** @param {{ id: number, name: string, username: string, email?: string, role: string, is_active: boolean }} employee */
+  /** @param {Employee} employee */
   async function removeEmployee(employee) {
     if (!window.confirm(`Delete ${employee.name}?`)) return;
     try {
