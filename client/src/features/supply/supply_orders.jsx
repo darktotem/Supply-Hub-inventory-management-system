@@ -30,7 +30,11 @@ function SupplyOrders() {
 
             setSuppliers(data)
         } catch (error) {
-            setError(error.message)
+            setError((previousError) =>
+                previousError
+                    ? `${previousError} | Suppliers: ${error.message}`
+                    : `Suppliers: ${error.message}`
+            )
         }
     }
 
@@ -46,7 +50,11 @@ function SupplyOrders() {
 
             setProducts(data)
         } catch (error) {
-            setError(error.message)
+            setError((previousError) =>
+                previousError
+                    ? `${previousError} | Products: ${error.message}`
+                    : `Products: ${error.message}`
+            )
         }
     }
 
@@ -68,8 +76,16 @@ function SupplyOrders() {
             }
 
             setOrders(data)
+            return true 
+
         } catch (error) {
-            setError(error.message)
+            setError((previousError) =>
+                previousError
+                    ? `${previousError} | Supply orders: ${error.message}`
+                    : `Supply orders: ${error.message}`
+            )
+            return false
+
         } finally {
             setLoading(false)
         }
@@ -89,6 +105,7 @@ function SupplyOrders() {
         date_of_order: ''
     })
 
+    //Handle form changes
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -96,10 +113,12 @@ function SupplyOrders() {
         })
     }
 
+    //Submit order
     const handleSubmit = async (e) => {
         e.preventDefault()
         setSubmitting(true)
         setSuccess('')
+        setError('')
 
         try {
             const token = localStorage.getItem('token')
@@ -121,11 +140,20 @@ function SupplyOrders() {
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.error || data.message || 'Failed to create supply order.')
+                const errorMessage = typeof data.error === 'object' && data.error !== null
+                    ? Object.values(data.error).map((message) => message.join(',')).join(',')
+                    : data.error || data.message || 'Failed to create supply order.'
+
+                throw new Error(errorMessage)
             }
 
-            await fetchOrders()
-            setSuccess('Supply order created successfully!')
+            const refreshed = await fetchOrders()
+            if (refreshed) {
+                setSuccess('Supply order created successfully!')
+                setError('')
+            } else {
+                setSuccess('Supply order created, but the order list could not be refreshed')
+            }
 
             setFormData({
                 supplier_id: '',
@@ -134,7 +162,6 @@ function SupplyOrders() {
                 date_of_order: ''
             })
 
-            setError('')
         } catch (error) {
             setError(error.message)
         } finally {
@@ -142,6 +169,7 @@ function SupplyOrders() {
         }
     }
 
+    //Cancel supply order
     const handleCancel = async (id) => {
         try {
             setCancelling(true)
@@ -164,11 +192,13 @@ function SupplyOrders() {
                 throw new Error(data.error || data.message || 'Failed to cancel order.')
             }
 
-            setOrders(orders.map((order) =>
-                order.id === id
-                    ? { ...order, status: 'Cancelled' }
-                    : order
-            ))
+           setOrders((previousOrders) =>
+                previousOrders.map((order) =>
+                    order.id === id
+                        ? {...order, status: 'Cancelled'}
+                        : order
+                )
+            )
 
             setError('')
             setSuccess('Supply order cancelled successfully!')
