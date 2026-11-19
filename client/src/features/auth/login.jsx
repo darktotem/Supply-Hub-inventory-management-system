@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   login,
   saveSession,
-  setNewPassword,
+  setNewPassword as setNewPasswordRequest,
   verifyRecoveryCode,
 } from "../../api/auth";
 
@@ -73,7 +73,7 @@ export default function Login({ onAuthenticated }) {
     resetMessage();
     setBusy(true);
     try {
-      const data = await setNewPassword(resetToken, newPassword, confirmPassword);
+      const data = await setNewPasswordRequest(resetToken, newPassword, confirmPassword);
       setPassword("");
       setNewPassword("");
       setConfirmPassword("");
