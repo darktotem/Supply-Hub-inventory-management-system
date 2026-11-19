@@ -14,6 +14,7 @@ from controllers.sales import sales_bp
 from controllers.warehouse import warehouse_bp
 from controllers.inventory import inventory_bp
 from controllers.audit import audit_bp
+from controllers.employees import employees_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -71,6 +72,7 @@ app.register_blueprint(invoice_bp)
 app.register_blueprint(sales_bp)
 app.register_blueprint(warehouse_bp)
 app.register_blueprint(audit_bp)
+app.register_blueprint(employees_bp)
 
 
 
