@@ -17,6 +17,9 @@ flask-bcrypt = "*"
 PyJWT = "*"
 email-validator = "*"
 pytest = "*"
+gunicorn = "*"
+psycopg = {extras = ["binary"], version = "*"}
+flasgger = "*"
 
 [dev-packages]
 pytest = "*"
