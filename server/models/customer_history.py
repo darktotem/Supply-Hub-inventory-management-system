@@ -1,3 +1,5 @@
+from datetime import datetime
+=======
 from datetime import datetime, timezone
 from extensions import db
 
@@ -10,11 +12,14 @@ class CustomerHistory(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     total_price = db.Column(db.Float, nullable=False)
+    date_of_sale = db.Column(db.DateTime, default=datetime.utcnow)
+=======
     date_of_sale = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     status = db.Column(db.String, default="pending")
 
     customer = db.relationship("Customer")
     product = db.relationship("Inventory")
+=======
     invoices = db.relationship("Invoice", back_populates="sale")
 
     def to_dict(self):
