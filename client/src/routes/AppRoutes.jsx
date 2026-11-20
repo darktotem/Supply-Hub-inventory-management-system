@@ -2,13 +2,25 @@ import { useState } from "react";
 import Login, { roleNames } from "../features/auth/login";
 import Employees from "../features/admin/employees";
 import Dashboard from "../features/admin/dashboard";
-import { changePassword, clearSession, getSavedUser, getSavedToken } from "../api/auth";
+import { changePassword, clearSession } from "../api/auth";
+
+/**
+ * @typedef {{
+ *   id: number,
+ *   name: string,
+ *   username: string,
+ *   email?: string | null,
+ *   role: string,
+ *   is_active: boolean,
+ *   must_change_password: boolean,
+ *   created_at?: string | null
+ * }} AuthUser
+ */
 
 export default function AppRoutes() {
-  const [user, setUser] = useState(() => {
-    const savedUser = getSavedUser();
-    return getSavedToken() && savedUser ? savedUser : null;
-  });
+  const [user, setUser] = /** @type {[AuthUser | null, import("react").Dispatch<import("react").SetStateAction<AuthUser | null>>]} */ (
+    useState(/** @type {AuthUser | null} */ (null))
+  );
 
   if (!user) return <Login onAuthenticated={setUser} />;
 
@@ -27,20 +39,21 @@ export default function AppRoutes() {
         <button className="logout-button" onClick={() => { clearSession(); setUser(null); }}>Sign out</button>
       </aside>
       <main className="main-content">
-        <header className="topbar"><div><strong>{user.name}</strong><span>{roleNames[user.role] || user.role}</span></div></header>
+        <header className="topbar"><div><strong>{user.name}</strong><span>{/** @type {Record<string, string>} */ (roleNames)[user.role] || user.role}</span></div></header>
         {user.role === "it_admin" ? <Employees /> : <Dashboard />}
       </main>
     </div>
   );
 }
 
-/** @param {{ user: any, onChanged: (user: any) => void }} props */
+/** @param {{ user: AuthUser, onChanged: (user: AuthUser) => void }} props */
 function RequiredPasswordChange({ user, onChanged }) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  /** @param {import("react").FormEvent<HTMLFormElement>} event */
   async function submit(event) {
     event.preventDefault();
     setBusy(true);
