@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api/client";
-
+import "./employees.css";
 const roles = [
   ["operations_director", "Operations Director"],
   ["it_admin", "IT Administrator"],

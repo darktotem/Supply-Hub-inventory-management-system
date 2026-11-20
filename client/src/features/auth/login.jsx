@@ -5,7 +5,7 @@ import {
   setNewPassword as setNewPasswordRequest,
   verifyRecoveryCode,
 } from "../../api/auth";
-
+import "./login.css";
 const roleNames = {
   operations_director: "Operations Director",
   it_admin: "IT Administrator",
@@ -28,6 +28,7 @@ export default function Login({ onAuthenticated }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   function resetMessage() {
     setError("");
@@ -105,7 +106,18 @@ export default function Login({ onAuthenticated }) {
             <label htmlFor="username">Username</label>
             <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" required />
             <label htmlFor="password">Password</label>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+            <div className="password-field">
+              <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+              <button
+                className="password-toggle"
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <button className="primary-button" type="submit" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
             <button className="text-button" type="button" onClick={() => { resetMessage(); setMode("recovery"); }}>Forgot password?</button>
           </form>

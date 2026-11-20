@@ -89,7 +89,12 @@ def upgrade():
         batch_op.create_index('ix_audit_logs_entity', ['entity'], unique=False)
         batch_op.create_index('ix_audit_logs_entity_id', ['entity_id'], unique=False)
         batch_op.create_unique_constraint('uq_audit_logs_hash', ['hash'])
-        batch_op.drop_constraint('fk_audit_logs_user_id_users', type_='foreignkey')
+        if op.get_bind().dialect.name == "postgresql":
+            # Postgres auto-named the unnamed FK created in the initial migration
+            batch_op.drop_constraint('audit_logs_user_id_fkey', type_='foreignkey')
+        else:
+            batch_op.drop_constraint('fk_audit_logs_user_id_users', type_='foreignkey')
+            
         batch_op.drop_column('details')
 
     # Update invoices table
