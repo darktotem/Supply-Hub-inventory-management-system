@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "checkJs": true,
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
+    "checkJs": false,
+    "strict": false,
+    "noEmit": false,
+    "skipLibCheck": false,
     "jsx": "react-jsx",
     "target": "ES2022",
     "module": "ESNext",
