@@ -1,5 +1,13 @@
-import AppRoutes from "./routes/AppRoutes";
+import React from "react"
+import Invoices from "./features/finance/invoices";
 
-export default function App() {
-  return <AppRoutes />;
+function App() {
+
+  return (
+    <>
+        <Invoices />
+    </>
+  )
 }
+
+export default App;
