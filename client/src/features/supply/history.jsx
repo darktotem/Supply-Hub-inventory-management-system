@@ -1,23 +1,50 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { api } from '../../api/client'
 
-function History({ transactions = [] }) {
+function History() {
+
+    //Component state
+    const [transactions, setTransactions] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState('All')
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
 
-    const filteredTransactions = transactions.filter((transaction) => {
-        const search = searchTerm.toLowerCase()
+    //Get supply history
+    const fetchHistory = async () => {
+        try {
+            const data = await api('/supplyhistory')
+            setTransactions(data)
+        } catch (error) {
+            setError(error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
 
-        const matchesSearch = 
-        transaction.id.toString().toLowerCase().includes(search) ||
-        transaction.supplier.toLowerCase().includes(search) ||
-        transaction.product.toLowerCase().includes(search)
+    //Load history on component mount
+    useEffect(() => {
+        fetchHistory()
+    }, [])
 
-        const matchesStatus = 
-        statusFilter === 'All' || transaction.status.toLowerCase() === statusFilter.toLowerCase()
+//Filter displayed records
+const filteredTransactions = transactions.filter((transaction) => {
+    const search = searchTerm.toLowerCase()
 
-        return matchesSearch && matchesStatus
-        
-    })
+    const supplierName = transaction.supplier?.name || ''
+    const productId = String(transaction.product_id || '')
+
+    const matchesSearch =
+        String(transaction.id).includes(search) ||
+        supplierName.toLowerCase().includes(search) ||
+        productId.includes(search)
+
+    const matchesStatus =
+        statusFilter === 'All' ||
+        transaction.status.toLowerCase() === statusFilter.toLowerCase()
+
+    return matchesSearch && matchesStatus
+})
 
     return (
         <div className="history-page">
@@ -27,7 +54,7 @@ function History({ transactions = [] }) {
             <div className="filters">
                 <input
                     type="text"
-                    placeholder="Search by order ID, Supplier, or Product..."
+                    placeholder="Search by order ID, Supplier, or Product ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -38,7 +65,6 @@ function History({ transactions = [] }) {
                 >
                     <option value="All">All Statuses</option>
                     <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
                     <option value="Cancelled">Cancelled</option>
                     <option value ="Delivered">Delivered</option>
                 </select>
@@ -47,7 +73,11 @@ function History({ transactions = [] }) {
             <div className="transaction-list">
                 <h3>Previous Supply Transactions</h3>
 
-                {filteredTransactions.length === 0 ? (
+                {loading ? (
+                    <p>Loading supply history...</p>
+                ) : error ? (
+                    <p className="error">{error}</p>
+                ) : filteredTransactions.length === 0 ? (
                     <p>No supply history available.</p>
                 ) : (
                     <table>
@@ -55,10 +85,10 @@ function History({ transactions = [] }) {
                             <tr>
                                 <th>Order ID</th>
                                 <th>Supplier</th>
-                                <th>Product</th>
+                                <th>Product ID</th>
                                 <th>Quantity</th>
-                                <th>Date</th>
-                                <th>Total Cost</th>
+                                <th>Order Date</th>
+                                <th>Delivery Date</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -66,17 +96,11 @@ function History({ transactions = [] }) {
                             {filteredTransactions.map((transaction) => (
                                 <tr key={transaction.id}>
                                     <td>{transaction.id}</td>
-                                    <td>{transaction.supplier}</td>
-                                    <td>{transaction.product}</td>
+                                    <td>{transaction.supplier?.name || 'Unknown'}</td>
+                                    <td>{transaction.product_id}</td>
                                     <td>{transaction.quantity}</td>
-                                    <td>{transaction.orderDate}</td>
-                                    <td>
-                                        {transaction.cost !== null &&
-                                        transaction.cost !== undefined &&
-                                        transaction.cost !== "" 
-                                            ? `KES ${Number(transaction.cost).toLocaleString()}`
-                                            : '-'}
-                                    </td>
+                                    <td>{transaction.date_of_order}</td>
+                                    <td>{transaction.date_of_delivery || '-'}</td>
                                     <td>{transaction.status}</td>
                                 </tr>
                             ))}

@@ -16,6 +16,7 @@ from utils.decorators import login_required, roles_required
 
 supply_bp = Blueprint("supply", __name__)
 
+#Get supply history
 @supply_bp.route("/supplyhistory", methods=["GET"])
 @login_required
 def get_supply_history():
@@ -32,6 +33,15 @@ def get_supply_history():
     """
     supply_history = SupplyHistory.query.all()
     result = supply_history_schema.dump(supply_history)
+
+    return jsonify(result), 200
+
+#Get all registered suppliers
+@supply_bp.route("/suppliers", methods=["GET"])
+@login_required
+def get_suppliers():
+    suppliers = Supplier.query.all()
+    result = supply_schema.dump(suppliers, many=True)
 
     return jsonify(result), 200
 
