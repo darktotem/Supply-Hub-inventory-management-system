@@ -1,8 +1,15 @@
+
 import { useState } from "react";
 import Login, { roleNames } from "../features/auth/login";
 import Employees from "../features/admin/employees";
 import Dashboard from "../features/admin/dashboard";
-import { changePassword, clearSession, getSavedUser, getSavedToken } from "../api/auth";
+import { Navbar } from "../components/Navbar";
+import {
+  changePassword,
+  clearSession,
+  getSavedUser,
+  getSavedToken,
+} from "../api/auth";
 
 export default function AppRoutes() {
   const [user, setUser] = useState(() => {
@@ -13,22 +20,46 @@ export default function AppRoutes() {
   if (!user) return <Login onAuthenticated={setUser} />;
 
   if (user.must_change_password) {
-    return <RequiredPasswordChange user={user} onChanged={(updatedUser) => setUser(updatedUser)} />;
+    return (
+      <RequiredPasswordChange
+        user={user}
+        onChanged={(updatedUser) => setUser(updatedUser)}
+      />
+    );
   }
 
+  const links =
+    user.role === "it_admin"
+      ? [{ label: "Employees", path: "#employees" }]
+      : [{ label: "Dashboard", path: "#dashboard" }];
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">SH</span><strong>Supply Hub</strong></div>
-        <nav>
-          {user.role === "it_admin" && <a href="#employees" className="active">Employees</a>}
-          {user.role !== "it_admin" && <a href="#dashboard" className="active">Dashboard</a>}
-        </nav>
-        <button className="logout-button" onClick={() => { clearSession(); setUser(null); }}>Sign out</button>
-      </aside>
-      <main className="main-content">
-        <header className="topbar"><div><strong>{user.name}</strong><span>{roleNames[user.role] || user.role}</span></div></header>
-        {user.role === "it_admin" ? <Employees /> : <Dashboard />}
+    <div className="flex min-h-screen w-full bg-[#f4f6fb]">
+      <Navbar links={links} />
+
+      <main className="min-w-0 flex-1">
+        <header className="flex h-[76px] items-center justify-between border-b border-slate-200 bg-white px-8">
+          <div>
+            <p className="font-semibold text-slate-800">{user.name}</p>
+            <p className="text-sm capitalize text-slate-500">
+              {roleNames[user.role] || user.role}
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              clearSession();
+              setUser(null);
+            }}
+            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          >
+            Sign out
+          </button>
+        </header>
+
+        <div className="p-8">
+          {user.role === "it_admin" ? <Employees /> : <Dashboard />}
+        </div>
       </main>
     </div>
   );
@@ -45,11 +76,14 @@ function RequiredPasswordChange({ user, onChanged }) {
     event.preventDefault();
     setBusy(true);
     setError("");
+
     try {
       await changePassword(oldPassword, newPassword);
       onChanged({ ...user, must_change_password: false });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to change password");
+      setError(
+        err instanceof Error ? err.message : "Unable to change password"
+      );
     } finally {
       setBusy(false);
     }
@@ -60,14 +94,35 @@ function RequiredPasswordChange({ user, onChanged }) {
       <section className="auth-card">
         <p className="eyebrow">Security</p>
         <h1>Change your password</h1>
-        <p className="form-help">Your administrator requires a new password before you continue.</p>
+        <p className="form-help">
+          Your administrator requires a new password before you continue.
+        </p>
+
         {error && <div className="alert alert-error">{error}</div>}
+
         <form onSubmit={submit}>
           <label htmlFor="old-password">Current password</label>
-          <input id="old-password" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} required />
+          <input
+            id="old-password"
+            type="password"
+            value={oldPassword}
+            onChange={(event) => setOldPassword(event.target.value)}
+            required
+          />
+
           <label htmlFor="required-new-password">New password</label>
-          <input id="required-new-password" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} required />
-          <button className="primary-button" type="submit" disabled={busy}>{busy ? "Updating…" : "Continue"}</button>
+          <input
+            id="required-new-password"
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            minLength={8}
+            required
+          />
+
+          <button className="primary-button" type="submit" disabled={busy}>
+            {busy ? "Updating…" : "Continue"}
+          </button>
         </form>
       </section>
     </main>
