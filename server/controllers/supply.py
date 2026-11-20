@@ -244,27 +244,10 @@ def cancel_order(order_id):
     if supply_order is None:
         return jsonify({"error": "Supply order not found"}), 404
 
-<<<<<<< HEAD
-    # Change the status only if the order is not already delivered or cancelled
-    claimed = db.session.execute(
-        update(SupplyHistory)
-        .where(
-            SupplyHistory.id == order_id,
-            SupplyHistory.status.not_in(["Delivered", "Cancelled"]),
-        )
-        .values(status=validated_data["status"])
-        .execution_options(synchronize_session=False)
-    )
-    if claimed.rowcount == 0:
-        db.session.rollback()
-        return jsonify({"error": "This order cannot be cancelled"}), 400
-
-=======
     if supply_order.status != "Pending":
         return jsonify({"error": "This order cannot be cancelled"}), 400
 
     supply_order.status = "Cancelled"
->>>>>>> d44866000b9671867cf56e680874ee1b251811e1
     db.session.commit()
 
     return jsonify({"message": "Supply order cancelled successfully"}), 200
