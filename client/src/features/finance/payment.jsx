@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getPayments, addPayment } from "../api/invoices";
+import { getPayments, addPayment } from "../../api/finance";
 
 const methods = [
   { value: "cash", label: "Cash" },

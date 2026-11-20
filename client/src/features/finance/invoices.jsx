@@ -1,33 +1,8 @@
 import React from 'react'
-import { useEffect } from 'react';
-import { useState } from 'react';
-import { getInvoices } from '../../api/finance';
-
-export const Invoices = () => {
-
-  const [invoices, setInvoices] = useState([]);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    getInvoices()
-      .then(setInvoices)
-      .catch((err) => setError(err.response?.data?.message || "Failed to load invoices from the server"));
-  }, []);
-
-  if (error) return <p>{error}</p>
-  return (
-    <>
-        <section>
-          <h1>The Invoices</h1>
-          <h2>An overview of financial operations</h2>
-        </section>
-    </>
-  )
-}
 import { useEffect, useState } from "react";
-import { getInvoices, createInvoice } from "../api/invoices";
-import { parseApiError } from "../api/errors";
-import Payments from "./payments";
+import { getInvoices, createInvoice } from "../../api/finance";
+import { parseApiError } from "../../api/errors";
+import Payments from "./payment";
 
 const emptyForm = {
   customer_id: "",
@@ -126,8 +101,6 @@ export default function Invoices() {
     }
   };
 
-  // Called by <Payments /> after a payment is recorded, so the table
-  // shows the new amount_paid and status without refetching.
   const handleInvoiceUpdated = (updated) => {
     setInvoices((prev) => prev.map((inv) => (inv.id === updated.id ? updated : inv)));
   };

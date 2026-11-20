@@ -27,10 +27,12 @@ const { data } = await api.post("/invoices/", body);
 return data; 
 };
 
+
 export const getPayments = async (invoiceId) => {
 const { data } = await api.get(`/invoices/${invoiceId}/payments`);
 return data;
 };
+
 
 export const addPayment = async (invoiceId, { amount, method = "cash", reference }) => {
 const body = { amount: String(amount), method };
