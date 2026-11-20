@@ -29,8 +29,6 @@ class Invoice(db.Model):
     sale = db.relationship("CustomerHistory", back_populates="invoices")
     customer = db.relationship("Customer", back_populates="invoices")
     product = db.relationship("Inventory", back_populates="invoices")
-<<<<<<< HEAD
-=======
     payments = db.relationship("Payment", back_populates="invoice")
 
 
@@ -57,4 +55,3 @@ class Payment(db.Model):
         db.CheckConstraint("amount > 0", name="ck_payment_amount_positive"),
         db.CheckConstraint("method IN ('cash','mpesa','bank','card')", name="ck_payment_method"),
     )
->>>>>>> d44866000b9671867cf56e680874ee1b251811e1
