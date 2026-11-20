@@ -7,7 +7,7 @@ function SupplyOrders() {
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
-    const [cancelling, setCancelling] = useState(false)
+    const [cancelling, setCancelling] = useState(null)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
@@ -124,7 +124,7 @@ function SupplyOrders() {
     //Cancel supply order
     const handleCancel = async (id) => {
         try {
-            setCancelling(true)
+            setCancelling(id)
             setSuccess('')
 
             await api(`/cancel_order/${id}`, {
@@ -145,7 +145,7 @@ function SupplyOrders() {
         } catch (error) {
             setError(error.message)
         } finally {
-            setCancelling(false)
+            setCancelling(null)
         }
     }
 
@@ -253,8 +253,9 @@ function SupplyOrders() {
                                     <td>
                                         {order.status === 'Pending' && (
                                                 <button
-                                                    onClick={() => handleCancel(order.id)} disabled={cancelling}>
-                                                    {cancelling ? 'Cancelling...' : 'Cancel'}
+                                                    onClick={() => handleCancel(order.id)} 
+                                                    disabled={cancelling === order.id}>
+                                                    {cancelling === order.id ? 'Cancelling...' : 'Cancel'}
                                                 </button>
                                         )}
                                     </td>
