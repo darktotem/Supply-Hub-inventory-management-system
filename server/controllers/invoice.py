@@ -2,16 +2,6 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
-
-from extensions import db
-
-from models.invoice import Invoice
-from models.customer import Customer
-from models.product import Product
-
-from schemas.invoice_schema import invoice_schema, invoices_schema
-
-=======
 from sqlalchemy import func
 
 from extensions import db
@@ -29,7 +19,6 @@ invoice_bp = Blueprint("invoice", __name__, url_prefix="/invoices")
 
 @invoice_bp.route("/", methods=["GET"])
 def get_invoices():
-=======
     """
     List invoices
     ---
@@ -45,7 +34,6 @@ def get_invoices():
 
 @invoice_bp.route("/", methods=["POST"], strict_slashes=False)
 def create_invoice():
-=======
     """
     Create an invoice for a sale
     ---
@@ -81,25 +69,6 @@ def create_invoice():
         customer = db.session.get(Customer, data["customer_id"])
         if not customer:
             return jsonify({"error": "Customer not found"}), 404
-
-        product = db.session.get(Product, data["product_id"])
-        if not product:
-            return jsonify({"error": "Product not found"}), 404
-
-        invoice = Invoice(
-            unit_price=data["unit_price"],  
-            quantity=data["quantity"],
-            customer_id=customer.id,
-            product_id=product.id,
-            status="pending",
-        )
-        db.session.add(invoice)
-        db.session.commit()
-
-        return jsonify({
-            "message": "Invoice created successfully",
-            "invoice": invoice_schema.dump(invoice),
-=======
         product = db.session.get(Inventory, data["product_id"])
         if not product:
             return jsonify({"error": "Product not found"}), 404
@@ -254,8 +223,6 @@ def add_payment(invoice_id):
         return jsonify({"errors": error.messages}), 400
     except IntegrityError:
         db.session.rollback()
-        return jsonify({"error": "A database constraint was violated"}), 409
-=======
         return jsonify({"error": "Duplicate payment reference or constraint violation"}), 409
     except Exception:
         db.session.rollback()

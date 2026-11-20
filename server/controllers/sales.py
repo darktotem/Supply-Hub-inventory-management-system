@@ -4,8 +4,6 @@ from extensions import db
 from models.customer import Customer
 from models.customer_history import CustomerHistory
 from models.inventory import Inventory
-from schemas.sales_schema import CustomerSchema, OrderSchema
-=======
 from models.user import Role
 from schemas.sales_schema import CustomerSchema, OrderSchema
 from utils.decorators import login_required, roles_required
@@ -15,15 +13,6 @@ sales_bp = Blueprint("sales", __name__)
 customer_schema = CustomerSchema()
 order_schema = OrderSchema()
 
-# TODO (Phase 3): the sales officer and the operations director can use every route.
-# The finance officer and the auditor only need GET /api/customer_history.
-
-
-# ---------- Customers ----------
-
-@sales_bp.get("/api/customers")
-def get_customers():
-=======
 
 @sales_bp.get("/api/customers")
 @login_required
@@ -44,8 +33,6 @@ def get_customers():
 
 
 @sales_bp.post("/api/register_customer")
-def register_customer():
-=======
 @login_required
 @roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def register_customer():
@@ -87,8 +74,6 @@ def register_customer():
 
 
 @sales_bp.delete("/api/delete_customer/<int:id>")
-def delete_customer(id):
-=======
 @login_required
 @roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def delete_customer(id):
@@ -123,11 +108,6 @@ def delete_customer(id):
     return jsonify({"message": "Customer deleted"}), 200
 
 
-# ---------- Customer orders ----------
-
-@sales_bp.get("/api/customer_orders")
-def get_customer_orders():
-=======
 
 @sales_bp.get("/api/customer_orders")
 @login_required
@@ -148,9 +128,6 @@ def get_customer_orders():
 
 
 @sales_bp.get("/api/customer_history")
-def get_customer_history():
-    # History = orders that are finished (fulfilled or cancelled), newest first
-=======
 @login_required
 def get_customer_history():
     """
@@ -174,8 +151,6 @@ def get_customer_history():
 
 
 @sales_bp.post("/api/post_customer_orders")
-def post_customer_order():
-=======
 @login_required
 @roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def post_customer_order():
@@ -233,8 +208,6 @@ def post_customer_order():
 
 
 @sales_bp.patch("/api/cancel_customer_order/<int:id>")
-def cancel_customer_order(id):
-=======
 @login_required
 @roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def cancel_customer_order(id):
@@ -269,8 +242,6 @@ def cancel_customer_order(id):
 
 
 @sales_bp.patch("/api/fulfil_customer_order/<int:id>")
-def fulfil_customer_order(id):
-=======
 @login_required
 @roles_required(Role.SALES, Role.OPERATIONS_DIRECTOR)
 def fulfil_customer_order(id):
