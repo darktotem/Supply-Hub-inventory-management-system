@@ -12,10 +12,9 @@ import {
 } from "../api/auth";
 
 export default function AppRoutes() {
-  const [user, setUser] = useState(() => {
-    const savedUser = getSavedUser();
-    return getSavedToken() && savedUser ? savedUser : null;
-  });
+  const [user, setUser] = /** @type {[AuthUser | null, import("react").Dispatch<import("react").SetStateAction<AuthUser | null>>]} */ (
+    useState(/** @type {AuthUser | null} */ (null))
+  );
 
   if (!user) return <Login onAuthenticated={setUser} />;
 
@@ -65,13 +64,14 @@ export default function AppRoutes() {
   );
 }
 
-/** @param {{ user: any, onChanged: (user: any) => void }} props */
+/** @param {{ user: AuthUser, onChanged: (user: AuthUser) => void }} props */
 function RequiredPasswordChange({ user, onChanged }) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  /** @param {import("react").FormEvent<HTMLFormElement>} event */
   async function submit(event) {
     event.preventDefault();
     setBusy(true);

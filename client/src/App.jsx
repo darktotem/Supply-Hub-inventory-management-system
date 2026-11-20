@@ -1,5 +1,12 @@
+import React from "react"
 import AppRoutes from "./routes/AppRoutes";
-import Inventory from "./features/inventory/inventory";
-export default function App() {
-  return <Inventory />;
+function App() {
+
+  return (
+    <>
+        <AppRoutes />
+    </>
+  )
 }
+
+export default App;
