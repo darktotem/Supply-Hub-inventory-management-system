@@ -18,6 +18,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CORS_ORIGINS = [
         o.strip()
-        for o in os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+        for o in os.environ.get(
+            "CORS_ORIGINS",
+            "http://localhost:5173,https://supply-hub-inventory-management-sys.vercel.app",
+        ).split(",")
         if o.strip()
     ]
