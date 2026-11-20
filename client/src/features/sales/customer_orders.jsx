@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState } from "react";
 import {
   getCustomers,
@@ -17,6 +18,7 @@ export default function CustomerOrders() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Load everything when the page opens
   useEffect(() => {
@@ -24,15 +26,14 @@ export default function CustomerOrders() {
   }, []);
 
   async function loadData() {
-    setCustomers(await getCustomers());
-    setProducts(await getProducts());
-    setOrders(await getOrders());
-  }
-
-  // Turn a customer id into a name for the table
-  function getCustomerName(id) {
-    const customer = customers.find((c) => c.id === id);
-    return customer ? customer.name : "Unknown";
+    try {
+      setCustomers(await getCustomers());
+      setProducts(await getProducts());
+      setOrders(await getOrders());
+    } catch (err) {
+      setMessage(err.message);
+    }
+    setLoading(false);
   }
 
   async function handleSubmit(e) {
@@ -56,17 +57,27 @@ export default function CustomerOrders() {
   }
 
   async function handleCancel(id) {
-    await cancelOrder(id);
-    loadData();
+    try {
+      await cancelOrder(id);
+      setMessage("");
+      loadData();
+    } catch (err) {
+      setMessage(err.message);
+    }
   }
 
   async function handleFulfil(id) {
     try {
       await fulfilOrder(id);
+      setMessage("");
       loadData();
     } catch (err) {
       setMessage(err.message);
     }
+  }
+
+  if (loading) {
+    return <p>Loading orders...</p>;
   }
 
   return (
@@ -78,7 +89,7 @@ export default function CustomerOrders() {
           <option value="">Select a customer</option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}
+              {c.customer_name}
             </option>
           ))}
         </select>
@@ -87,7 +98,7 @@ export default function CustomerOrders() {
           <option value="">Select a product</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} - KES {p.price} ({p.stock} in stock)
+              {p.product_name} - KES {p.price} ({p.quantity} in stock)
             </option>
           ))}
         </select>
@@ -123,10 +134,10 @@ export default function CustomerOrders() {
             {orders.map((o) => (
               <tr key={o.id}>
                 <td>{o.id}</td>
-                <td>{getCustomerName(o.customerId)}</td>
-                <td>{o.productName}</td>
+                <td>{o.customer_name}</td>
+                <td>{o.product_name}</td>
                 <td>{o.quantity}</td>
-                <td>{o.total}</td>
+                <td>{o.total_price}</td>
                 <td>{o.status}</td>
                 <td>
                   {o.status === "pending" && (

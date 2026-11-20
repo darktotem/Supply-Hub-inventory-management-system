@@ -1,12 +1,13 @@
+// @ts-nocheck
 import { useEffect, useState } from "react";
 import { getCustomers, createCustomer, deleteCustomer } from "../../api/sales";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [contact, setContact] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Load customers when the page opens
   useEffect(() => {
@@ -14,29 +15,46 @@ export default function Customers() {
   }, []);
 
   async function loadCustomers() {
-    const data = await getCustomers();
-    setCustomers(data);
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (err) {
+      setMessage(err.message);
+    }
+    setLoading(false);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (name === "" || email === "" || phone === "") {
+    if (customerName === "" || contact === "") {
       setMessage("Please fill in all fields.");
       return;
     }
 
-    await createCustomer({ name, email, phone });
-    setName("");
-    setEmail("");
-    setPhone("");
-    setMessage("");
-    loadCustomers();
+    try {
+      await createCustomer({ customer_name: customerName, contact: contact });
+      setCustomerName("");
+      setContact("");
+      setMessage("");
+      loadCustomers();
+    } catch (err) {
+      setMessage(err.message);
+    }
   }
 
   async function handleDelete(id) {
-    await deleteCustomer(id);
-    loadCustomers();
+    try {
+      await deleteCustomer(id);
+      setMessage("");
+      loadCustomers();
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  if (loading) {
+    return <p>Loading customers...</p>;
   }
 
   return (
@@ -46,18 +64,13 @@ export default function Customers() {
       <form onSubmit={handleSubmit}>
         <input
           placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
         />
         <input
           placeholder="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          value={contact}
+          onChange={(e) => setContact(e.target.value)}
         />
         <button type="submit">Add customer</button>
       </form>
@@ -71,7 +84,6 @@ export default function Customers() {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Email</th>
               <th>Phone</th>
               <th>Action</th>
             </tr>
@@ -79,9 +91,8 @@ export default function Customers() {
           <tbody>
             {customers.map((c) => (
               <tr key={c.id}>
-                <td>{c.name}</td>
-                <td>{c.email}</td>
-                <td>{c.phone}</td>
+                <td>{c.customer_name}</td>
+                <td>{c.contact}</td>
                 <td>
                   <button onClick={() => handleDelete(c.id)}>Delete</button>
                 </td>
