@@ -1,7 +1,9 @@
 from flask import request, Blueprint, jsonify
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
+from utils.decorators import login_required, roles_required
 
+from models.user import Role
 from extensions import db
 from models.inventory import Inventory
 from schemas.inventory_schema import inventory_schema, search_schema
@@ -11,6 +13,8 @@ inventory_bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 
 
 @inventory_bp.post("")
+@login_required
+@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
 def create_inventory():
     """
     Create an inventory item
@@ -54,6 +58,7 @@ def create_inventory():
 
 
 @inventory_bp.get("")
+@login_required
 def get_inventory():
     """
     List all inventory items
@@ -70,6 +75,7 @@ def get_inventory():
  
  
 @inventory_bp.get("/<int:item_id>")
+@login_required
 def get_inventory_item(item_id):
     """
     Get one inventory item
@@ -96,6 +102,7 @@ def get_inventory_item(item_id):
  
  
 @inventory_bp.put("/<int:item_id>")
+@login_required
 def update_inventory(item_id):
     """
     Update an inventory item
@@ -148,6 +155,7 @@ def update_inventory(item_id):
  
  
 @inventory_bp.delete("/<int:item_id>")
+@login_required
 def delete_inventory(item_id):
     """
     Delete an inventory item
@@ -177,6 +185,7 @@ def delete_inventory(item_id):
  
  
 @inventory_bp.get("/low-stock")
+@login_required
 def get_low_stock():
     """
     List items at or below their stock threshold
@@ -195,6 +204,7 @@ def get_low_stock():
  
  
 @inventory_bp.post("/search")
+@login_required
 def search_inventory():
     """
     Search inventory by product name

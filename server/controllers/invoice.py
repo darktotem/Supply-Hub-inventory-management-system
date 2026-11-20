@@ -3,9 +3,10 @@ from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
+from utils.decorators import login_required, roles_required
 
 from extensions import db
-
+from models.user import Role
 from models.invoice import Invoice, Payment
 from models.customer import Customer
 from models.customer_history import CustomerHistory
@@ -18,6 +19,8 @@ invoice_bp = Blueprint("invoice", __name__, url_prefix="/invoices")
 
 
 @invoice_bp.route("/", methods=["GET"])
+@login_required
+@roles_required(Role.FINANCE, Role.AUDITOR, Role.OPERATIONS_DIRECTOR)
 def get_invoices():
     """
     List invoices
@@ -33,6 +36,8 @@ def get_invoices():
 
 
 @invoice_bp.route("/", methods=["POST"], strict_slashes=False)
+@login_required
+@roles_required(Role.FINANCE)
 def create_invoice():
     """
     Create an invoice for a sale
@@ -124,6 +129,8 @@ def create_invoice():
 
 
 @invoice_bp.route("/<int:invoice_id>/payments", methods=["GET"])
+@login_required
+@roles_required(Role.FINANCE, Role.AUDITOR, Role.OPERATIONS_DIRECTOR,)
 def get_payments(invoice_id):
     """
     List payments for an invoice
@@ -148,6 +155,8 @@ def get_payments(invoice_id):
 
 
 @invoice_bp.route("/<int:invoice_id>/payments", methods=["POST"])
+@login_required
+@roles_required(Role.FINANCE)
 def add_payment(invoice_id):
     """
     Add a payment to an invoice

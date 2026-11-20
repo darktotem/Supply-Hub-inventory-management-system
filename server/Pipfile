@@ -20,6 +20,7 @@ pytest = "*"
 gunicorn = "*"
 psycopg = {extras = ["binary"], version = "*"}
 flasgger = "*"
+python-dotenv = "*"
 
 [dev-packages]
 pytest = "*"
