@@ -13,11 +13,7 @@ from schemas.warehouse_schema import (
     warehouse_product_schema,
     warehouse_product_update_schema,
 )
-<<<<<<< HEAD
-from utils.stock import add_stock
-=======
 from utils.decorators import login_required, roles_required
->>>>>>> d44866000b9671867cf56e680874ee1b251811e1
 
 warehouse_bp = Blueprint("warehouse", __name__)
 

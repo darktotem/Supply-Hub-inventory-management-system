@@ -7,11 +7,7 @@ from models.customer_history import CustomerHistory
 from models.inventory import Inventory
 from models.user import Role
 from schemas.sales_schema import CustomerSchema, OrderSchema
-<<<<<<< HEAD
 from utils.stock import take_stock
-=======
-from utils.decorators import login_required, roles_required
->>>>>>> d44866000b9671867cf56e680874ee1b251811e1
 
 sales_bp = Blueprint("sales", __name__)
 

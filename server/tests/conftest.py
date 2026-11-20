@@ -4,18 +4,10 @@ from pathlib import Path
 
 from app import app as flask_app
 from extensions import db
-<<<<<<< HEAD
-from models.customer import Customer
-from models.customer_history import CustomerHistory
-from models.inventory import Inventory
-from models.invoice import Invoice  # Inventory points to Invoice, so it must be loaded
-from controllers.sales import sales_bp
-=======
 
 from models.supplier import Supplier
 from models.supply_history import SupplyHistory
 from models.user import Role
->>>>>>> d44866000b9671867cf56e680874ee1b251811e1
 
 
 from models import (
