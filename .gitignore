@@ -22,10 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-<<<<<<< HEAD
-*.pytest_cache
-=======
 *.db
 
 .env
->>>>>>> d44866000b9671867cf56e680874ee1b251811e1
+
