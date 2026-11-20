@@ -5,7 +5,7 @@ import {
   setNewPassword as setNewPasswordRequest,
   verifyRecoveryCode,
 } from "../../api/auth";
-
+import "./login.css";
 const roleNames = {
   operations_director: "Operations Director",
   it_admin: "IT Administrator",
