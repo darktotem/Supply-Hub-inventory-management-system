@@ -24,7 +24,7 @@ MAX_RECOVERY_ATTEMPTS = 5
 def _matches(hashed, raw):
     try:
         return bcrypt.check_password_hash(hashed, raw)
-    except ValueError:  # e.g. input longer than bcrypt's 72-byte limit
+    except ValueError: 
         return False
 
 
