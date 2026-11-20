@@ -137,9 +137,6 @@ def get_customer_orders():
 @sales_bp.get("/api/customer_history")
 @login_required
 def get_customer_history():
-<<<<<<< HEAD
-    # History = orders that are finished (fulfilled or cancelled), newest first
-=======
     """
     List customer order history
     ---
@@ -151,7 +148,6 @@ def get_customer_history():
       200:
         description: Order history
     """
->>>>>>> d44866000b9671867cf56e680874ee1b251811e1
     history = (
         CustomerHistory.query
         .filter(CustomerHistory.status != "pending")
