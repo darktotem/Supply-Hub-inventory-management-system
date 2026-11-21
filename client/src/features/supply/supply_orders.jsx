@@ -11,6 +11,10 @@ function SupplyOrders() {
     const [cancelling, setCancelling] = useState(null)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
+    const [searchTerm, setSearchTerm] = useState('')
+    const [statusFilter, setStatusFilter] = useState('All')
+    const [page, setPage] = useState(1)
+    const PAGE_SIZE = 8
 
     //Fetch suppliers
     const fetchSuppliers = async () => {
@@ -144,12 +148,78 @@ function SupplyOrders() {
         }
     }
 
+    //Get product name
+    const productName = (id) =>
+        products.find((product) => product.id === id)?.product_name || String(id)
+
+    //Count orders with a given status
+    const countByStatus = (status) =>
+        orders.filter((order) => order.status === status).length
+
+    //Filter Orders
+    const filteredOrders = orders.filter((order) => {
+        const search = searchTerm.toLowerCase()
+        const matchesSearch =
+            String(order.id).includes(search) ||
+            (order.supplier?.name || '').toLowerCase().includes(search) ||
+            productName(order.product_id).toLowerCase().includes(search)
+        const matchesStatus = statusFilter === 'All' || order.status === statusFilter
+        return matchesSearch && matchesStatus
+    })
+ 
+    //Pagination
+    const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE))
+    const currentPage = Math.min(page, totalPages)
+    const pagedOrders = filteredOrders.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+    )
+
     return (
         <div className="supply-orders-page">
             <h2>Supply Orders</h2>
             <p>View and manage your supply orders.</p>
             {error && <p className="error-message">{error}</p>}
             {success && <p className="success-message">{success}</p>}
+
+            
+            <div className="stat-cards">
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <span className="stat-icon stat-icon-total">📦</span>
+                        <span className="stat-label">Total Orders</span>
+                    </div>
+                    <span className="stat-value">{orders.length}</span>
+                    <span className="stat-badge stat-badge-total">All supply orders</span>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <span className="stat-icon stat-icon-pending">⏳</span>
+                        <span className="stat-label">Pending</span>
+                    </div>
+                    <span className="stat-value">{countByStatus('Pending')}</span>
+                    <span className="stat-badge stat-badge-pending">Awaiting delivery</span>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <span className="stat-icon stat-icon-delivered">✅</span>
+                        <span className="stat-label">Delivered</span>
+                    </div>
+                    <span className="stat-value">{countByStatus('Delivered')}</span>
+                    <span className="stat-badge stat-badge-delivered">Received</span>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <span className="stat-icon stat-icon-cancelled">✖</span>
+                        <span className="stat-label">Cancelled</span>
+                    </div>
+                    <span className="stat-value">{countByStatus('Cancelled')}</span>
+                    <span className="stat-badge stat-badge-cancelled">Order cancelled</span>
+                </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="order-form">
                 <h3>Create Supply Order</h3>
@@ -218,52 +288,119 @@ function SupplyOrders() {
             <div className="orders-list">
                 <h3>All Supply Orders</h3>
 
+                <div className="filters">
+                    <input
+                        type="text"
+                        placeholder="Search by order ID, supplier or product..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value)
+                            setPage(1)
+                        }}
+                    />
+
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => {
+                            setStatusFilter(e.target.value)
+                            setPage(1)
+                        }}
+                    >
+                        <option value="All">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
                 {loading ? (
                     <p>Loading supply orders...</p>
-                ) : orders.length === 0 ? (
+                ) : filteredOrders.length === 0 ? (
                     <p>No supply orders found.</p>
-                ) : ( 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Supplier</th>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Order Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
+                ) : (
+                    <>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Supplier</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Order Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
 
-                        <tbody>
-                            {orders.map((order) => (
-                                <tr key={order.id}>
-                                    <td>{order.id}</td>
-                                    <td>{order.supplier?.name}</td>
-                                    <td>{products.find((product) => product.id === order.product_id)?.product_name || order.product_id}</td>
-                                    <td>{order.quantity}</td>
-                                    <td>{order.date_of_order}</td>
-                                    <td>
-                                        <span className={`status-badge status-${order.status.toLowerCase()}`}>
-                                            {order.status}
+                            <tbody>
+                                {pagedOrders.map((order) => (
+                                    <tr key={order.id}>
+                                        <td>#{order.id}</td>
+                                        <td>{order.supplier?.name}</td>
+                                        <td>{productName(order.product_id)}</td>
+                                        <td>{order.quantity}</td>
+                                        <td>{order.date_of_order}</td>
+                                        <td>
+                                            <span className={`status-badge status-${order.status.toLowerCase()}`}>
+                                                {order.status}
                                             </span>
-                                    </td>
-                                    <td>
-                                        {order.status === 'Pending' && (
+                                        </td>
+                                        <td>
+                                            {order.status === 'Pending' && (
                                                 <button
-                                                    onClick={() => handleCancel(order.id)} 
-                                                    disabled={cancelling === order.id}>
+                                                    type="button"
+                                                    className="cancel-btn"
+                                                    onClick={() => handleCancel(order.id)}
+                                                    disabled={cancelling === order.id}
+                                                >
                                                     {cancelling === order.id ? 'Cancelling...' : 'Cancel'}
                                                 </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        <div className="pagination">
+                            <span className="pagination-info">
+                                Showing {(currentPage - 1) * PAGE_SIZE + 1}-
+                                {Math.min(currentPage * PAGE_SIZE, filteredOrders.length)} of {filteredOrders.length} orders
+                            </span>
+
+                            <div className="pagination-buttons">
+                                <button
+                                    type="button"
+                                    onClick={() => setPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    &lt;
+                                </button>
+
+                                {Array.from({ length: totalPages }, (_, index) => index + 1).map((number) => (
+                                    <button
+                                        type="button"
+                                        key={number}
+                                        className={number === currentPage ? 'active' : ''}
+                                        onClick={() => setPage(number)}
+                                    >
+                                        {number}
+                                    </button>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    onClick={() => setPage(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    &gt;
+                                </button>
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
+           
         </div>
     )
 }
