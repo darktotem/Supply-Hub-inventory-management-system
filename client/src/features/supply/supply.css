@@ -1,0 +1,289 @@
+/* Supply pages - shared layout */
+.suppliers-page,
+.supply-orders-page,
+.history-page {
+    min-height: 100vh;
+    padding: 30px;
+    background: #f7f7fb;
+    color: #252538;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.suppliers-page h2,
+.supply-orders-page h2,
+.history-page h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: #242438;
+}
+
+.suppliers-page > p,
+.supply-orders-page > p,
+.history-page > p {
+    color: #77778a;
+    font-size: 14px;
+    margin: 0 0 25px;
+}
+
+/* Content panels */
+.supplier-form,
+.supplier-list,
+.order-form,
+.orders-list,
+.transaction-list {
+    background: #ffffff;
+    border: 1px solid #eeeeF4;
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 3px 12px rgba(30, 30, 60, 0.04);
+}
+
+.supplier-form h3,
+.supplier-list h3,
+.order-form h3,
+.orders-list h3,
+.transaction-list h3 {
+    margin: 0 0 20px;
+    font-size: 19px;
+    color: #29293d;
+}
+
+/* Forms */
+.supplier-form,
+.order-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.supplier-form h3,
+.order-form h3 {
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
+}
+
+.supplier-form input,
+.order-form input,
+.order-form select,
+.history-page .filters input,
+.history-page .filters select {
+    width: 100%;
+    min-width: 0;
+    padding: 13px 15px;
+    border: 1px solid #e5e5ee;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #29293d;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.supplier-form input:focus,
+.order-form input:focus,
+.order-form select:focus,
+.history-page .filters input:focus,
+.history-page .filters select:focus {
+    border-color: #5746d8;
+    box-shadow: 0 0 0 3px rgba(87, 70, 216, 0.1);
+}
+
+/* History filters */
+
+.history-page .filters {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.history-page .filters input {
+    flex: 1;
+}
+
+.history-page .filters select {
+    max-width: 200px;
+}
+
+/* Buttons */
+.supplier-form button,
+.order-form button,
+.supplier-list button,
+.orders-list button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #5145cd;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.supplier-form button,
+.order-form button {
+    justify-self: start;
+}
+
+.supplier-form button:hover,
+.order-form button:hover,
+.supplier-list button:hover,
+.orders-list button:hover {
+    background: #4035b5;
+}
+
+.supplier-form button:disabled,
+.order-form button:disabled,
+.orders-list button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Tables */
+.supplier-list,
+.orders-list,
+.transaction-list {
+    overflow-x: auto;
+}
+
+.supplier-list table,
+.orders-list table,
+.transaction-list table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.supplier-list th,
+.orders-list th,
+.transaction-list th {
+    padding: 15px 12px;
+    background: #f7f7fb;
+    color: #77778a;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.supplier-list td,
+.orders-list td,
+.transaction-list td {
+    padding: 16px 12px;
+    border-bottom: 1px solid #eeeeF4;
+    color: #45455a;
+    font-size: 13px;
+}
+
+.supplier-list tbody tr:hover,
+.orders-list tbody tr:hover,
+.transaction-list tbody tr:hover {
+    background: #fafaff;
+}
+
+.supplier-list tbody tr:last-child td,
+.orders-list tbody tr:last-child td,
+.transaction-list tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Success and error messages */
+.message,
+.success-message,
+.error-message,
+.history-page .error {
+    padding: 12px 16px;
+    margin: 12px 0 20px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.success-message {
+    background: #e8f8ef;
+    color: #16834b;
+}
+
+.error-message,
+.history-page .error {
+    background: #fff0f0;
+    color: #c93645;
+}
+
+.message {
+    background: #eeedff;
+    color: #5145cd;
+}
+
+/* Status badges */
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: #fff4d9;
+    color: #bd8100;
+}
+
+.status-delivered {
+    background: #e5f8ed;
+    color: #16834b;
+}
+
+.status-cancelled {
+    background: #ffe8e9;
+    color: #c93645;
+}
+
+
+/* Responsive layout */
+@media (max-width: 768px) {
+    .suppliers-page,
+    .supply-orders-page,
+    .history-page {
+        padding: 18px;
+    }
+
+    .suppliers-page h2,
+    .supply-orders-page h2,
+    .history-page h2 {
+        font-size: 23px;
+    }
+
+    .supplier-form,
+    .order-form {
+        grid-template-columns: 1fr;
+    }
+
+    .supplier-form h3,
+    .order-form h3 {
+        grid-column: auto;
+    }
+
+    .history-page .filters {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .supplier-form button,
+    .order-form button {
+        width: 100%;
+    }
+
+    .supplier-form,
+    .supplier-list,
+    .order-form,
+    .orders-list,
+    .transaction-list {
+        padding: 18px;
+    }
+}

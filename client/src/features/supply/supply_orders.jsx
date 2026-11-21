@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSuppliers, getInventory, getSupplyHistory,createSupplyOrder,cancelSupplyOrder} from '../../api/supply'
+import './supply.css'
 
 function SupplyOrders() {
     const [orders, setOrders] = useState([])
@@ -243,7 +244,11 @@ function SupplyOrders() {
                                     <td>{products.find((product) => product.id === order.product_id)?.product_name || order.product_id}</td>
                                     <td>{order.quantity}</td>
                                     <td>{order.date_of_order}</td>
-                                    <td>{order.status}</td>
+                                    <td>
+                                        <span className={`status-badge status-${order.status.toLowerCase()}`}>
+                                            {order.status}
+                                            </span>
+                                    </td>
                                     <td>
                                         {order.status === 'Pending' && (
                                                 <button

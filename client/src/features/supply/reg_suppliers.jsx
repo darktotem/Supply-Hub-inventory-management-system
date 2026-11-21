@@ -1,5 +1,6 @@
 import { useState, useEffect} from 'react'
 import { getSuppliers, registerSupplier, deleteSupplier } from '../../api/supply'
+import './supply.css'
 
 function RegSuppliers() {
     const [suppliers, setSuppliers] = useState([])

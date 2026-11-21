@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSupplyHistory } from '../../api/supply'
+import './supply.css'
 
 function History() {
 
@@ -101,7 +102,11 @@ const filteredTransactions = transactions.filter((transaction) => {
                                     <td>{transaction.quantity}</td>
                                     <td>{transaction.date_of_order}</td>
                                     <td>{transaction.date_of_delivery || '-'}</td>
-                                    <td>{transaction.status}</td>
+                                    <td>
+                                        <span className={`status-badge status-${transaction.status.toLowerCase()}`}>
+                                            {transaction.status}
+                                        </span>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
