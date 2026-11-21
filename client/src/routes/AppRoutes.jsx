@@ -2,6 +2,9 @@ import { useState } from "react";
 import Login, { roleNames } from "../features/auth/login";
 import Employees from "../features/admin/employees";
 import Dashboard from "../features/admin/dashboard";
+import AddProduct from "../features/wearhouse/add_product";
+import Deliveries from "../features/wearhouse/deliveries";
+import Reports from "../features/wearhouse/reports";
 import { changePassword, clearSession } from "../api/auth";
 
 /**
@@ -22,6 +25,7 @@ export default function AppRoutes() {
     useState(/** @type {AuthUser | null} */ (null))
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activePage, setActivePage] = useState("dashboard");
 
   if (!user) return <Login onAuthenticated={setUser} />;
 
@@ -34,9 +38,24 @@ export default function AppRoutes() {
     );
   }
 
+  const isWarehouseUser = ["store_worker", "operations_director"].includes(user.role);
   const navigation = user.role === "it_admin"
-    ? [{ href: "#employees", label: "Employees" }]
-    : [{ href: "#dashboard", label: "Dashboard" }];
+    ? [{ href: "#employees", label: "Employees", page: "employees" }]
+    : [
+        ...(user.role === "operations_director"
+          ? [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]
+          : []),
+        ...(isWarehouseUser
+          ? [
+              { href: "#warehouse-products", label: "Products", page: "warehouse-products" },
+              { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
+              { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
+            ]
+          : [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]),
+      ];
+  const selectedPage = navigation.some((item) => item.page === activePage)
+    ? activePage
+    : navigation[0].page;
 
   function signOut() {
     clearSession();
@@ -54,7 +73,12 @@ export default function AppRoutes() {
 
         <nav className="navbar-links" aria-label="Main navigation">
           {navigation.map((item) => (
-            <a key={item.href} href={item.href} className="active">
+            <a
+              key={item.href}
+              href={item.href}
+              className={selectedPage === item.page ? "active" : ""}
+              onClick={() => setActivePage(item.page)}
+            >
               {item.label}
             </a>
           ))}
@@ -85,8 +109,11 @@ export default function AppRoutes() {
             <a
               key={item.href}
               href={item.href}
-              className="active"
-              onClick={() => setMobileMenuOpen(false)}
+              className={selectedPage === item.page ? "active" : ""}
+              onClick={() => {
+                setActivePage(item.page);
+                setMobileMenuOpen(false);
+              }}
             >
               {item.label}
             </a>
@@ -105,7 +132,11 @@ export default function AppRoutes() {
       )}
 
       <main className="main-content">
-        {user.role === "it_admin" ? <Employees /> : <Dashboard />}
+        {selectedPage === "employees" ? <Employees />
+          : selectedPage === "warehouse-products" ? <AddProduct />
+            : selectedPage === "warehouse-deliveries" ? <Deliveries />
+              : selectedPage === "warehouse-reports" ? <Reports />
+                : <Dashboard />}
       </main>
     </div>
   );
