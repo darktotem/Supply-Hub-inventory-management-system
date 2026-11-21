@@ -54,7 +54,7 @@ with app.app_context():
 
     print("Creation of the Initial admin")
 
-    existing_user = User.query.filter_by(it_admin="it_admin").first()
+    existing_user = User.query.filter_by(username="it_admin").first()
 
     if existing_user:
         print(f"An Admin already exists. Please login")
