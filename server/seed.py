@@ -54,7 +54,7 @@ with app.app_context():
 
     print("Creation of the Initial admin")
 
-    existing_user = User.query.filter_by(username="it_admin").first()
+    existing_user = User.query.filter_by(username="testadmin").first()
 
     if existing_user:
         print(f"An Admin already exists. Please login")
@@ -62,7 +62,7 @@ with app.app_context():
 
     user = User(
         name="Supply Hub [change this]",
-        username="testAdmin",
+        username="testadmin",
         email= "initialemail@gmail.com",
         role="it_admin",
         is_active=True,
@@ -77,7 +77,7 @@ with app.app_context():
 
     print(f"\nSuccessfully created the initial admin of this system")
     print("""\nTEST ACCOUNT CREDENTIALS ;
-            >>>> Username ---> testAdmin
+            >>>> Username ---> testadmin
             >>>> Password ---> must_change_password
             >>>> Role  -----> It Admin
     
