@@ -21,25 +21,90 @@ export default function AppRoutes() {
   const [user, setUser] = /** @type {[AuthUser | null, import("react").Dispatch<import("react").SetStateAction<AuthUser | null>>]} */ (
     useState(/** @type {AuthUser | null} */ (null))
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!user) return <Login onAuthenticated={setUser} />;
 
   if (user.must_change_password) {
-    return <RequiredPasswordChange user={user} onChanged={(updatedUser) => setUser(updatedUser)} />;
+    return (
+      <RequiredPasswordChange
+        user={user}
+        onChanged={(updatedUser) => setUser(updatedUser)}
+      />
+    );
+  }
+
+  const navigation = user.role === "it_admin"
+    ? [{ href: "#employees", label: "Employees" }]
+    : [{ href: "#dashboard", label: "Dashboard" }];
+
+  function signOut() {
+    clearSession();
+    setMobileMenuOpen(false);
+    setUser(null);
   }
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">SH</span><strong>Supply Hub</strong></div>
-        <nav>
-          {user.role === "it_admin" && <a href="#employees" className="active">Employees</a>}
-          {user.role !== "it_admin" && <a href="#dashboard" className="active">Dashboard</a>}
+      <header className="navbar">
+        <div className="brand">
+          <span className="brand-mark">SH</span>
+          <strong>Supply Hub</strong>
+        </div>
+
+        <nav className="navbar-links" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <a key={item.href} href={item.href} className="active">
+              {item.label}
+            </a>
+          ))}
         </nav>
-        <button className="logout-button" onClick={() => { clearSession(); setUser(null); }}>Sign out</button>
+
+        <div className="navbar-user">
+          <div>
+            <strong>{user.name}</strong>
+            <span>{/** @type {Record<string, string>} */ (roleNames)[user.role] || user.role}</span>
+          </div>
+          <button className="logout-button" type="button" onClick={signOut}>Sign out</button>
+        </div>
+
+        <button
+          className="hamburger-button"
+          type="button"
+          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          <span></span><span></span><span></span>
+        </button>
+      </header>
+
+      <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`} aria-hidden={!mobileMenuOpen}>
+        <nav aria-label="Mobile navigation">
+          {navigation.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="active"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+        <button className="logout-button" type="button" onClick={signOut}>Sign out</button>
       </aside>
+
+      {mobileMenuOpen && (
+        <button
+          className="sidebar-overlay"
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       <main className="main-content">
-        <header className="topbar"><div><strong>{user.name}</strong><span>{/** @type {Record<string, string>} */ (roleNames)[user.role] || user.role}</span></div></header>
         {user.role === "it_admin" ? <Employees /> : <Dashboard />}
       </main>
     </div>
@@ -58,6 +123,7 @@ function RequiredPasswordChange({ user, onChanged }) {
     event.preventDefault();
     setBusy(true);
     setError("");
+
     try {
       await changePassword(oldPassword, newPassword);
       onChanged({ ...user, must_change_password: false });
@@ -73,14 +139,35 @@ function RequiredPasswordChange({ user, onChanged }) {
       <section className="auth-card">
         <p className="eyebrow">Security</p>
         <h1>Change your password</h1>
-        <p className="form-help">Your administrator requires a new password before you continue.</p>
+        <p className="form-help">
+          Your administrator requires a new password before you continue.
+        </p>
+
         {error && <div className="alert alert-error">{error}</div>}
+
         <form onSubmit={submit}>
           <label htmlFor="old-password">Current password</label>
-          <input id="old-password" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} required />
+          <input
+            id="old-password"
+            type="password"
+            value={oldPassword}
+            onChange={(event) => setOldPassword(event.target.value)}
+            required
+          />
+
           <label htmlFor="required-new-password">New password</label>
-          <input id="required-new-password" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} required />
-          <button className="primary-button" type="submit" disabled={busy}>{busy ? "Updating…" : "Continue"}</button>
+          <input
+            id="required-new-password"
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            minLength={8}
+            required
+          />
+
+          <button className="primary-button" type="submit" disabled={busy}>
+            {busy ? "Updating…" : "Continue"}
+          </button>
         </form>
       </section>
     </main>

@@ -46,15 +46,34 @@ def colors(palette):
 
 @app.after_request
 def add_cors_headers(response):
-    """Lets the Vite app (port 5173) call this API. Replaces flask-cors."""
+    """Allow the configured frontend origins to call this API."""
     origin = request.headers.get("Origin")
-    if origin and origin in app.config["CORS_ORIGINS"]:
+    allowed_origins = app.config["CORS_ORIGINS"]
+
+    if origin and origin in allowed_origins:
         response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST,PUT, PATCH, DELETE, OPTIONS"
-        response.headers["Access-Control-Max-Age"] = "600"
         response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        response.headers["Access-Control-Max-Age"] = "600"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+
     return response
+
+
+@app.before_request
+def handle_cors_preflight():
+    if request.method == "OPTIONS":
+        origin = request.headers.get("Origin")
+        if origin and origin in app.config["CORS_ORIGINS"]:
+            response = jsonify({"status": "ok"})
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            response.headers["Access-Control-Max-Age"] = "600"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            return response, 200
 
 @app.errorhandler(404)
 def not_found(e):
