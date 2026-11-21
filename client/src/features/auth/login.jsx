@@ -29,6 +29,8 @@ export default function Login({ onAuthenticated }) {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function resetMessage() {
     setError("");
@@ -138,9 +140,19 @@ export default function Login({ onAuthenticated }) {
         {mode === "reset" && (
           <form onSubmit={handleReset}>
             <label htmlFor="new-password">New password</label>
-            <input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
+            <div className="password-field">
+              <input id="new-password" type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
+              <button className="password-toggle" type="button" aria-label={showNewPassword ? "Hide new password" : "Show new password"} aria-pressed={showNewPassword} onClick={() => setShowNewPassword((visible) => !visible)}>
+                {showNewPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <label htmlFor="confirm-password">Confirm password</label>
-            <input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
+            <div className="password-field">
+              <input id="confirm-password" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
+              <button className="password-toggle" type="button" aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"} aria-pressed={showConfirmPassword} onClick={() => setShowConfirmPassword((visible) => !visible)}>
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <button className="primary-button" type="submit" disabled={busy}>{busy ? "Updating…" : "Update password"}</button>
           </form>
         )}

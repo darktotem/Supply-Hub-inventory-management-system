@@ -21,11 +21,11 @@ export function login(username, password) {
   });
 }
 
-/** @param {string} oldPassword @param {string} newPassword @returns {Promise<{ message: string }>} */
-export function changePassword(oldPassword, newPassword) {
+/** @param {string} oldPassword @param {string} newPassword @param {string} confirmPassword @returns {Promise<{ message: string }>} */
+export function changePassword(oldPassword, newPassword, confirmPassword) {
   return api("/api/change_password", {
     method: "PATCH",
-    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword, confirm_password: confirmPassword }),
   });
 }
 

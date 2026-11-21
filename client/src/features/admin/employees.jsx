@@ -21,6 +21,7 @@ export default function Employees() {
   const [editing, setEditing] = useState(/** @type {Employee | null} */(null));
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [showTemporaryPassword, setShowTemporaryPassword] = useState(false);
 
   async function loadEmployees() {
     try {
@@ -127,7 +128,23 @@ export default function Employees() {
           <div><label>Username</label><input name="username" value={form.username} onChange={updateField} required /></div>
           <div><label>Email</label><input name="email" type="email" value={form.email} onChange={updateField} /></div>
           <div><label>Role</label><select name="role" value={form.role} onChange={updateField}>{roles.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
-          {!editing && <div><label>Temporary password <span>(optional)</span></label><input name="password" type="password" value={form.password} onChange={updateField} /></div>}
+          {!editing && (
+            <div>
+              <label>Temporary password <span>(optional)</span></label>
+              <div className="password-field">
+                <input name="password" type={showTemporaryPassword ? "text" : "password"} value={form.password} onChange={updateField} />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  aria-label={showTemporaryPassword ? "Hide temporary password" : "Show temporary password"}
+                  aria-pressed={showTemporaryPassword}
+                  onClick={() => setShowTemporaryPassword((visible) => !visible)}
+                >
+                  {showTemporaryPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="button-row">
           <button className="primary-button" type="submit">{editing ? "Save changes" : "Create employee"}</button>

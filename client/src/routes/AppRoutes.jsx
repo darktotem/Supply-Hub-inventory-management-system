@@ -115,6 +115,10 @@ export default function AppRoutes() {
 function RequiredPasswordChange({ user, onChanged }) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -125,7 +129,7 @@ function RequiredPasswordChange({ user, onChanged }) {
     setError("");
 
     try {
-      await changePassword(oldPassword, newPassword);
+      await changePassword(oldPassword, newPassword, confirmPassword);
       onChanged({ ...user, must_change_password: false });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to change password");
@@ -147,23 +151,51 @@ function RequiredPasswordChange({ user, onChanged }) {
 
         <form onSubmit={submit}>
           <label htmlFor="old-password">Current password</label>
-          <input
-            id="old-password"
-            type="password"
-            value={oldPassword}
-            onChange={(event) => setOldPassword(event.target.value)}
-            required
-          />
+          <div className="password-field">
+            <input
+              id="old-password"
+              type={showOldPassword ? "text" : "password"}
+              value={oldPassword}
+              onChange={(event) => setOldPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+            <button className="password-toggle" type="button" aria-label={showOldPassword ? "Hide current password" : "Show current password"} aria-pressed={showOldPassword} onClick={() => setShowOldPassword((visible) => !visible)}>
+              {showOldPassword ? "Hide" : "Show"}
+            </button>
+          </div>
 
           <label htmlFor="required-new-password">New password</label>
-          <input
-            id="required-new-password"
-            type="password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            minLength={8}
-            required
-          />
+          <div className="password-field">
+            <input
+              id="required-new-password"
+              type={showNewPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+            <button className="password-toggle" type="button" aria-label={showNewPassword ? "Hide new password" : "Show new password"} aria-pressed={showNewPassword} onClick={() => setShowNewPassword((visible) => !visible)}>
+              {showNewPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+
+          <label htmlFor="required-confirm-password">Confirm new password</label>
+          <div className="password-field">
+            <input
+              id="required-confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+            <button className="password-toggle" type="button" aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"} aria-pressed={showConfirmPassword} onClick={() => setShowConfirmPassword((visible) => !visible)}>
+              {showConfirmPassword ? "Hide" : "Show"}
+            </button>
+          </div>
 
           <button className="primary-button" type="submit" disabled={busy}>
             {busy ? "Updating…" : "Continue"}

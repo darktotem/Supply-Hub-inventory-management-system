@@ -89,6 +89,28 @@
   box-shadow: 0 0 0 3px #dbeafe;
 }
 
+/* ---------- Password fields ---------- */
+.employee-form .password-field {
+  position: relative;
+}
+
+.employee-form .password-field input {
+  padding-right: 68px;
+}
+
+.employee-form .password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 /* ---------- Buttons ---------- */
 .button-row {
   display: flex;
