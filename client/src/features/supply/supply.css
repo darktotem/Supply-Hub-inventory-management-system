@@ -93,6 +93,112 @@
     font-weight: 700;
 }
 
+/* ===== History page: stat cards ===== */
+.history-page .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.history-page .stat-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.history-page .stat-label {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.history-page .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.history-page .stat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.history-page .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.history-page .stat-icon-total     { background: #e0e7ff; }
+.history-page .stat-icon-pending   { background: #fef3c7; }
+.history-page .stat-icon-delivered { background: #dcfce7; }
+.history-page .stat-icon-cancelled { background: #fee2e2; }
+
+.history-page .stat-badge {
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.history-page .stat-badge-total     { background: #e0e7ff; color: #4338ca; }
+.history-page .stat-badge-pending   { background: #fef3c7; color: #b45309; }
+.history-page .stat-badge-delivered { background: #dcfce7; color: #15803d; }
+.history-page .stat-badge-cancelled { background: #fee2e2; color: #b91c1c; }
+
+/* ===== History page: filter bar spacing and ID column ===== */
+.history-page .filters {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.history-page td:first-child {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ===== History page: pagination buttons ===== */
+.history-page .pagination-buttons button {
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.history-page .pagination-buttons button.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+}
+
+.history-page .pagination-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 800px) {
+    .history-page .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 /* ===== White content panels ===== */
 .supplier-form,
 .supplier-list,
