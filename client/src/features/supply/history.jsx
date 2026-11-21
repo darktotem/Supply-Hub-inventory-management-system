@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { api } from '../../api/client'
+import { getSupplyHistory } from '../../api/supply'
 
 function History() {
 
@@ -13,7 +13,7 @@ function History() {
     //Get supply history
     const fetchHistory = async () => {
         try {
-            const data = await api('/supplyhistory')
+            const data = await getSupplyHistory()
             setTransactions(data)
         } catch (error) {
             setError(error.message)
