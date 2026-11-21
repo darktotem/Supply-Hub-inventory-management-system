@@ -59,6 +59,7 @@ class LoginSchema(BaseSchema):
 class ChangePasswordSchema(BaseSchema):
     old_password = fields.String(required=True)
     new_password = Password(required=True)
+    confirm_password = fields.String(required=True)
 
 
 class ChangeUsernameSchema(BaseSchema):
