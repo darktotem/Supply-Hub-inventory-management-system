@@ -1,5 +1,5 @@
 import { useState, useEffect} from 'react'
-import { api } from '../../api/client'
+import { getSuppliers, registerSupplier, deleteSupplier } from '../../api/supply'
 
 function RegSuppliers() {
     const [suppliers, setSuppliers] = useState([])
@@ -15,7 +15,7 @@ function RegSuppliers() {
     //Fetch all registered suppliers
     const fetchSuppliers = async () => {
         try {
-            const data = await api('/suppliers')
+            const data = await getSuppliers()
             setSuppliers(data)
         } catch (error) {
             console.error('Error fetching suppliers:', error)
@@ -42,10 +42,7 @@ function RegSuppliers() {
         setMessage('')
 
         try {
-            const data = await api('/register_supplier', {
-                method: 'POST',
-                body: JSON.stringify(formData)
-            })
+            const data = await registerSupplier(formData)
                  
             setSuppliers(prevSuppliers => [...prevSuppliers, data])
             setMessage('Supplier registered successfully.')
@@ -67,9 +64,7 @@ function RegSuppliers() {
         setMessage('')
 
         try {
-            await api(`/delete_suppliers/${id}`,{
-                method: 'DELETE'
-            })
+            await deleteSupplier(id)
            
             setSuppliers(prevSuppliers => prevSuppliers.filter(supplier => supplier.id !== id))
             setMessage('Supplier deleted successfully.')
