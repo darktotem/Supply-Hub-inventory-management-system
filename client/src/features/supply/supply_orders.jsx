@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { api } from '../../api/client'
+import { getSuppliers, getInventory, getSupplyHistory,createSupplyOrder,cancelSupplyOrder} from '../../api/supply'
 
 function SupplyOrders() {
     const [orders, setOrders] = useState([])
@@ -14,7 +14,7 @@ function SupplyOrders() {
     //Fetch suppliers
     const fetchSuppliers = async () => {
         try {
-            const data = await api('/suppliers')
+            const data = await getSuppliers()
             setSuppliers(data)
         } catch (error) {
             setError((previousError) =>
@@ -28,7 +28,7 @@ function SupplyOrders() {
     // Fetch products
     const fetchProducts = async () => {
         try {
-            const data = await api('/inventory')
+            const data = await getInventory()
             setProducts(data)
         } catch (error) {
             setError((previousError) =>
@@ -42,7 +42,7 @@ function SupplyOrders() {
     // Fetch existing supply orders
     const fetchOrders = async () => {
         try {
-            const data = await api('/supplyhistory')
+            const data = await getSupplyHistory()
             setOrders(data)
             return true 
 
@@ -89,14 +89,11 @@ function SupplyOrders() {
         setError('')
 
         try {
-            await api('/supply_orders', {
-                method: 'POST',
-                body: JSON.stringify({
-                    supplier_id: Number(formData.supplier_id),
-                    product_id: Number(formData.product_id),
-                    quantity: Number(formData.quantity),
-                    date_of_order: formData.date_of_order
-                })
+            await createSupplyOrder({
+                supplier_id: Number(formData.supplier_id),
+                product_id: Number(formData.product_id),
+                quantity: Number(formData.quantity),
+                date_of_order: formData.date_of_order
             })
 
             const refreshed = await fetchOrders()
@@ -127,10 +124,7 @@ function SupplyOrders() {
             setCancelling(id)
             setSuccess('')
 
-            await api(`/cancel_order/${id}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ status: 'Cancelled' })
-            })
+            await cancelSupplyOrder(id)
 
            setOrders((previousOrders) =>
                 previousOrders.map((order) =>
