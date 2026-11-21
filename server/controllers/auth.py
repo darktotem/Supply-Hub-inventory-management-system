@@ -77,6 +77,9 @@ def change_password():
     if err:
         return err
 
+    if data["new_password"] != data["confirm_password"]:
+        return {"error": "Passwords do not match"}, 400
+
     user = current_user()
     if not user.check_password(data["old_password"]):
         return {"error": "Current password is incorrect"}, 400
