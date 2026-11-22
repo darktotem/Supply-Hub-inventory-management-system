@@ -1,7 +1,15 @@
 import { useState } from "react";
 import Login, { roleNames } from "../features/auth/login";
+import History from "../features/supply/history";
+import RegSuppliers from "../features/supply/reg_suppliers";
+import SupplyOrders from "../features/supply/supply_orders";
+import Customers from "../features/sales/customers";
+import CustomerOrders from "../features/sales/customer_orders";
 import Employees from "../features/admin/employees";
 import Dashboard from "../features/admin/dashboard";
+import Inventory from "../features/inventory/inventory";
+import Invoices from "../features/finance/invoices";
+import AuditDashboard from "../features/auditor/audit_dashboard";
 import AddProduct from "../features/wearhouse/add_product";
 import Deliveries from "../features/wearhouse/deliveries";
 import Reports from "../features/wearhouse/reports";
@@ -38,21 +46,39 @@ export default function AppRoutes() {
     );
   }
 
+  const isOperationsDirector = user.role === "operations_director";
   const isWarehouseUser = ["store_worker", "operations_director"].includes(user.role);
-  const navigation = user.role === "it_admin"
-    ? [{ href: "#employees", label: "Employees", page: "employees" }]
-    : [
-        ...(user.role === "operations_director"
-          ? [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]
-          : []),
-        ...(isWarehouseUser
-          ? [
-              { href: "#warehouse-products", label: "Products", page: "warehouse-products" },
-              { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
-              { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
-            ]
-          : [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]),
-      ];
+
+  let navigation;
+  if (user.role === "it_admin") {
+    navigation = [{ href: "#employees", label: "Employees", page: "employees" }];
+  } else if (user.role === "procurement_officer") {
+    navigation = [
+      { href: "#suppliers", label: "Suppliers", page: "suppliers" },
+      { href: "#supply-orders", label: "Supply Orders", page: "supply-orders" },
+      { href: "#supply-history", label: "Supply History", page: "supply-history" },
+    ];
+  } else if (user.role === "sales_officer") {
+    navigation = [
+      { href: "#customers", label: "Customers", page: "customers" },
+      { href: "#customer-orders", label: "Customer Orders", page: "customer-orders" },
+    ];
+  } else if (user.role === "finance_officer") {
+    navigation = [{ href: "#invoices", label: "Invoices", page: "invoices" }];
+  } else if (user.role === "auditor") {
+    navigation = [{ href: "#audit", label: "Audit Logs", page: "audit" }];
+  } else if (isWarehouseUser) {
+    navigation = [
+      ...(isOperationsDirector
+        ? [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]
+        : []),
+      { href: "#warehouse-products", label: "Products", page: "warehouse-products" },
+      { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
+      { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
+    ];
+  } else {
+    navigation = [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }];
+  }
   const selectedPage = navigation.some((item) => item.page === activePage)
     ? activePage
     : navigation[0].page;
@@ -133,10 +159,18 @@ export default function AppRoutes() {
 
       <main className="main-content">
         {selectedPage === "employees" ? <Employees />
-          : selectedPage === "warehouse-products" ? <AddProduct />
-            : selectedPage === "warehouse-deliveries" ? <Deliveries />
-              : selectedPage === "warehouse-reports" ? <Reports />
-                : <Dashboard />}
+          : selectedPage === "suppliers" ? <RegSuppliers />
+            : selectedPage === "supply-orders" ? <SupplyOrders />
+              : selectedPage === "supply-history" ? <History />
+                : selectedPage === "customers" ? <Customers />
+                  : selectedPage === "customer-orders" ? <CustomerOrders />
+                    : selectedPage === "inventory" ? <Inventory />
+                      : selectedPage === "invoices" ? <Invoices />
+                        : selectedPage === "audit" ? <AuditDashboard />
+                          : selectedPage === "warehouse-products" ? <AddProduct />
+                            : selectedPage === "warehouse-deliveries" ? <Deliveries />
+                              : selectedPage === "warehouse-reports" ? <Reports />
+                                : <Dashboard />}
       </main>
     </div>
   );
