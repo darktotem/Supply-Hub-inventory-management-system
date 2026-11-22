@@ -1,0 +1,330 @@
+/* ===== 1. Variables and page layout ===== */
+.suppliers-page,
+.supply-orders-page,
+.history-page {
+    --primary: #4f46e5;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --card: #ffffff;
+    padding: 30px;
+    background: #f5f6fb;
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+/* ===== 2. Titles and messages ===== */
+.suppliers-page h2,
+.supply-orders-page h2,
+.history-page h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 6px;
+}
+
+.suppliers-page > p,
+.supply-orders-page > p,
+.history-page > p {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+}
+
+.error-message,
+.history-page .error,
+.suppliers-page .message {
+    color: #b91c1c;
+}
+
+.success-message {
+    color: #15803d;
+}
+
+/* ===== 3. Stat cards ===== */
+.suppliers-page .stat-cards,
+.supply-orders-page .stat-cards,
+.history-page .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.suppliers-page .stat-card,
+.supply-orders-page .stat-card,
+.history-page .stat-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.suppliers-page .stat-header,
+.supply-orders-page .stat-header,
+.history-page .stat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.suppliers-page .stat-label,
+.supply-orders-page .stat-label,
+.history-page .stat-label {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.suppliers-page .stat-value,
+.supply-orders-page .stat-value,
+.history-page .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.suppliers-page .stat-icon,
+.supply-orders-page .stat-icon,
+.history-page .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.stat-icon-total     { background: #e0e7ff; }
+.stat-icon-pending   { background: #fef3c7; }
+.stat-icon-delivered { background: #dcfce7; }
+.stat-icon-cancelled { background: #fee2e2; }
+
+.suppliers-page .stat-badge,
+.supply-orders-page .stat-badge,
+.history-page .stat-badge {
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stat-badge-total     { background: #e0e7ff; color: #4338ca; }
+.stat-badge-pending   { background: #fef3c7; color: #b45309; }
+.stat-badge-delivered { background: #dcfce7; color: #15803d; }
+.stat-badge-cancelled { background: #fee2e2; color: #b91c1c; }
+
+
+/* ===== 4. Panels, forms and filter bar ===== */
+.supplier-form,
+.supplier-list,
+.order-form,
+.orders-list,
+.transaction-list {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.supplier-form h3,
+.supplier-list h3,
+.order-form h3,
+.orders-list h3,
+.transaction-list h3 {
+    margin: 0 0 16px;
+    font-size: 18px;
+}
+
+.supplier-form,
+.order-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.supplier-form h3,
+.order-form h3 {
+    width: 100%;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.filters input {
+    flex: 1;
+    min-width: 240px;
+}
+
+.history-page .filters {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.suppliers-page input,
+.suppliers-page select,
+.supply-orders-page input,
+.supply-orders-page select,
+.history-page input,
+.history-page select {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 14px;
+    color: var(--text);
+}
+
+.suppliers-page input:focus,
+.suppliers-page select:focus,
+.supply-orders-page input:focus,
+.supply-orders-page select:focus,
+.history-page input:focus,
+.history-page select:focus {
+    outline: 2px solid var(--primary);
+    border-color: transparent;
+}
+
+/* ===== 5. Buttons ===== */
+.suppliers-page button,
+.supply-orders-page button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.suppliers-page button:disabled,
+.supply-orders-page button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.supply-orders-page .cancel-btn,
+.suppliers-page .delete-btn {
+    padding: 6px 14px;
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* ===== 6. Tables and status pills ===== */
+.suppliers-page table,
+.supply-orders-page table,
+.history-page table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.suppliers-page th,
+.supply-orders-page th,
+.history-page th {
+    text-align: left;
+    padding: 12px;
+    background: #f9fafb;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.suppliers-page td,
+.supply-orders-page td,
+.history-page td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+
+.supply-orders-page td:first-child,
+.history-page td:first-child {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-pending   { background: #ede9fe; color: #6d28d9; }
+.status-delivered { background: #dcfce7; color: #15803d; }
+.status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+
+/* ===== 7. Pagination ===== */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.pagination-info {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.suppliers-page .pagination-buttons button,
+.supply-orders-page .pagination-buttons button,
+.history-page .pagination-buttons button {
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.suppliers-page .pagination-buttons button.active,
+.supply-orders-page .pagination-buttons button.active,
+.history-page .pagination-buttons button.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+}
+
+.suppliers-page .pagination-buttons button:disabled,
+.supply-orders-page .pagination-buttons button:disabled,
+.history-page .pagination-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* ===== 8. Small screens ===== */
+@media (max-width: 800px) {
+    .suppliers-page .stat-cards,
+    .supply-orders-page .stat-cards,
+    .history-page .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
