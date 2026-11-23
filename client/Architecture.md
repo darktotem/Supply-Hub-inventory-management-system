@@ -8,10 +8,14 @@ ROUTES
 
 >> OPERATIONS DIRECTOR (admin)
     1. view inventory
-    2. view supply history
-    3. view sales history
-    4. approve/cancel supply orders from procurement officer
-    5. set stock thresholds
+    2. Add products.
+    3. Update existing products.
+    4. Delete products.
+    5. Set and update stock thresholds.
+    6. view supply history
+    7. view sales history
+    8. approve/cancel supply orders from procurement officer
+    9. set stock thresholds
 
 >> AN IT 
     manage employees (register, delete, patch records)
@@ -25,9 +29,11 @@ ROUTES
 
 >> STORE WORKER
     1. view inventory
-    2. view supply orders/history
-    3. manage deliveries(mark orders as delivered, adding new product)(create new, patch existing)
-    4. give reports about inventory
+    2. Add new products.
+    3. Update existing products.
+    4. view supply orders/history
+    5. manage deliveries(mark orders as delivered, adding new product)(create new, patch existing)
+    6. give reports about inventory
 
 >> SALES OFFICER (customers)
     1. view inventory
