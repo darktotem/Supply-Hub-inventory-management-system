@@ -8,7 +8,7 @@ import {
   fulfilOrder,
 } from "../../api/sales";
 
-export default function CustomerOrders() {
+export default function CustomerOrders({ readOnly = false }) {
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -73,7 +73,7 @@ export default function CustomerOrders() {
     <div>
       <h1>Customer Orders</h1>
 
-      <form onSubmit={handleSubmit}>
+      {!readOnly && <form onSubmit={handleSubmit}>
         <select value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
           <option value="">Select a customer</option>
           {customers.map((c) => (
@@ -100,7 +100,7 @@ export default function CustomerOrders() {
         />
 
         <button type="submit">Create order</button>
-      </form>
+      </form>}
 
       {message && <p>{message}</p>}
 
@@ -116,7 +116,7 @@ export default function CustomerOrders() {
               <th>Qty</th>
               <th>Total (KES)</th>
               <th>Status</th>
-              <th>Actions</th>
+              {!readOnly && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -128,14 +128,14 @@ export default function CustomerOrders() {
                 <td>{o.quantity}</td>
                 <td>{o.total}</td>
                 <td>{o.status}</td>
-                <td>
+                {!readOnly && <td>
                   {o.status === "pending" && (
                     <>
                       <button onClick={() => handleFulfil(o.id)}>Fulfil</button>
                       <button onClick={() => handleCancel(o.id)}>Cancel</button>
                     </>
                   )}
-                </td>
+                </td>}
               </tr>
             ))}
           </tbody>

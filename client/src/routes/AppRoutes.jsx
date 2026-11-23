@@ -1,7 +1,18 @@
 import { useState } from "react";
 import Login, { roleNames } from "../features/auth/login";
+import History from "../features/supply/history";
+import RegSuppliers from "../features/supply/reg_suppliers";
+import SupplyOrders from "../features/supply/supply_orders";
+import Customers from "../features/sales/customers";
+import CustomerOrders from "../features/sales/customer_orders";
 import Employees from "../features/admin/employees";
 import Dashboard from "../features/admin/dashboard";
+import Inventory from "../features/inventory/inventory";
+import Invoices from "../features/finance/invoices";
+import AuditDashboard from "../features/auditor/audit_dashboard";
+import AddProduct from "../features/wearhouse/add_product";
+import Deliveries from "../features/wearhouse/deliveries";
+import Reports from "../features/wearhouse/reports";
 import { changePassword, clearSession } from "../api/auth";
 
 /**
@@ -22,6 +33,7 @@ export default function AppRoutes() {
     useState(/** @type {AuthUser | null} */ (null))
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activePage, setActivePage] = useState("dashboard");
 
   if (!user) return <Login onAuthenticated={setUser} />;
 
@@ -34,9 +46,52 @@ export default function AppRoutes() {
     );
   }
 
-  const navigation = user.role === "it_admin"
-    ? [{ href: "#employees", label: "Employees" }]
-    : [{ href: "#dashboard", label: "Dashboard" }];
+  const isOperationsDirector = user.role === "operations_director";
+  const isWarehouseUser = ["store_worker", "operations_director"].includes(user.role);
+
+  let navigation;
+  if (user.role === "it_admin") {
+    navigation = [{ href: "#employees", label: "Employees", page: "employees" }];
+  } else if (user.role === "procurement_officer") {
+    navigation = [
+      { href: "#suppliers", label: "Suppliers", page: "suppliers" },
+      { href: "#supply-orders", label: "Supply Orders", page: "supply-orders" },
+      { href: "#supply-history", label: "Supply History", page: "supply-history" },
+    ];
+  } else if (user.role === "sales_officer") {
+    navigation = [
+      { href: "#customers", label: "Customers", page: "customers" },
+      { href: "#customer-orders", label: "Customer Orders", page: "customer-orders" },
+    ];
+  } else if (user.role === "finance_officer") {
+    navigation = [{ href: "#invoices", label: "Invoices", page: "invoices" }];
+  } else if (user.role === "auditor") {
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#suppliers", label: "Suppliers", page: "suppliers" },
+      { href: "#supply-history", label: "Supply History", page: "supply-history" },
+      { href: "#customers", label: "Customers", page: "customers" },
+      { href: "#customer-orders", label: "Sales", page: "customer-orders" },
+      { href: "#invoices", label: "Financials", page: "invoices" },
+      { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
+      { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
+      { href: "#audit", label: "Audit Logs", page: "audit" },
+    ];
+  } else if (isWarehouseUser) {
+    navigation = [
+      ...(isOperationsDirector
+        ? [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]
+        : []),
+      { href: "#warehouse-products", label: "Products", page: "warehouse-products" },
+      { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
+      { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
+    ];
+  } else {
+    navigation = [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }];
+  }
+  const selectedPage = navigation.some((item) => item.page === activePage)
+    ? activePage
+    : navigation[0].page;
 
   function signOut() {
     clearSession();
@@ -54,7 +109,12 @@ export default function AppRoutes() {
 
         <nav className="navbar-links" aria-label="Main navigation">
           {navigation.map((item) => (
-            <a key={item.href} href={item.href} className="active">
+            <a
+              key={item.href}
+              href={item.href}
+              className={selectedPage === item.page ? "active" : ""}
+              onClick={() => setActivePage(item.page)}
+            >
               {item.label}
             </a>
           ))}
@@ -85,8 +145,11 @@ export default function AppRoutes() {
             <a
               key={item.href}
               href={item.href}
-              className="active"
-              onClick={() => setMobileMenuOpen(false)}
+              className={selectedPage === item.page ? "active" : ""}
+              onClick={() => {
+                setActivePage(item.page);
+                setMobileMenuOpen(false);
+              }}
             >
               {item.label}
             </a>
@@ -105,7 +168,19 @@ export default function AppRoutes() {
       )}
 
       <main className="main-content">
-        {user.role === "it_admin" ? <Employees /> : <Dashboard />}
+        {selectedPage === "employees" ? <Employees />
+          : selectedPage === "suppliers" ? <RegSuppliers readOnly={user.role === "auditor"} />
+            : selectedPage === "supply-orders" ? <SupplyOrders />
+              : selectedPage === "supply-history" ? <History />
+                : selectedPage === "customers" ? <Customers readOnly={user.role === "auditor"} />
+                  : selectedPage === "customer-orders" ? <CustomerOrders readOnly={user.role === "auditor"} />
+                    : selectedPage === "inventory" ? <Inventory readOnly={user.role === "auditor"} />
+                      : selectedPage === "invoices" ? <Invoices readOnly={user.role === "auditor"} />
+                        : selectedPage === "audit" ? <AuditDashboard />
+                          : selectedPage === "warehouse-products" ? <AddProduct readOnly={user.role === "auditor"} />
+                            : selectedPage === "warehouse-deliveries" ? <Deliveries readOnly={user.role === "auditor"} />
+                              : selectedPage === "warehouse-reports" ? <Reports readOnly={user.role === "auditor"} />
+                                : <Dashboard />}
       </main>
     </div>
   );
