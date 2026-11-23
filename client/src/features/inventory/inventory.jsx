@@ -835,7 +835,7 @@ function Inventory({ readOnly = false }) {
                   <th>QUANTITY</th>
                   <th>THRESHOLD</th>
                   <th>STATUS</th>
-                  <th>ACTIONS</th>
+                  {!readOnly && <th>ACTIONS</th>}
                 </tr>
               </thead>
 

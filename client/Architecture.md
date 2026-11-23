@@ -18,7 +18,8 @@ ROUTES
     9. set stock thresholds
 
 >> AN IT 
-    manage employees (register, delete, patch records)
+    1. view inventory
+    2. manage employees (register, delete, patch records)
 
 
 >> PROCUREMENT OFFICER (suppliers)
@@ -43,10 +44,11 @@ ROUTES
     3. manage customer orders (create, cancel) --moves to sales history
 
 >> FINANCE OFFICER (payments)
-    1. view sales history
-    2. view supply history
-    3. manage invoices
-    4. manage payments (mark it as paid)
+    1. view inventory
+    2. view sales history
+    3. view supply history
+    4. manage invoices
+    5. manage payments (mark it as paid)
   
 
 COMPONENTS
