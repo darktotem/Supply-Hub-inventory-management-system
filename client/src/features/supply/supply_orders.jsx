@@ -273,6 +273,7 @@ function SupplyOrders() {
                     name="date_of_order"
                     value={formData.date_of_order}
                     onChange={handleChange}
+                    onClick={(e) => e.target.showPicker?.()}
                     required
                 />
 
