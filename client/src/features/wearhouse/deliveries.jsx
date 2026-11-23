@@ -5,7 +5,7 @@ import {
 } from "../../api/warehouse";
 import "./warehouse.css";
 
-function Deliveries() {
+function Deliveries({ readOnly = false }) {
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receivingId, setReceivingId] = useState(null);
@@ -133,7 +133,7 @@ function Deliveries() {
                   <th>Order date</th>
                   <th>Received date</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  {!readOnly && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -152,7 +152,7 @@ function Deliveries() {
                           {delivery.status || "Unknown"}
                         </span>
                       </td>
-                      <td>
+                      {!readOnly && <td>
                         {delivery.status === "Pending" ? (
                           <button
                             className="warehouse-small-button"
@@ -163,7 +163,7 @@ function Deliveries() {
                             {receivingId === delivery.id ? "Receiving…" : "Receive"}
                           </button>
                         ) : <span className="warehouse-muted">—</span>}
-                      </td>
+                      </td>}
                     </tr>
                   );
                 })}

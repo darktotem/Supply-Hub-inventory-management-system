@@ -39,7 +39,7 @@ function StatusBadge({ status }) {
   return <span style={{ ...styles.badge, ...colors }}>{status}</span>;
 }
 
-export default function Invoices() {
+export default function Invoices({ readOnly = false }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -112,7 +112,7 @@ export default function Invoices() {
     <div style={styles.page}>
       <h1 style={styles.h1}>Invoices</h1>
 
-      <section style={styles.section}>
+      {!readOnly && <section style={styles.section}>
         <h2 style={styles.h2}>Create invoice</h2>
 
         <form onSubmit={handleSubmit}>
@@ -149,7 +149,7 @@ export default function Invoices() {
             {submitting ? "Creating..." : "Create invoice"}
           </button>
         </form>
-      </section>
+      </section>}
 
       <section style={styles.section}>
         <h2 style={styles.h2}>All invoices</h2>
@@ -213,7 +213,7 @@ export default function Invoices() {
 
       {selectedInvoice && (
         <section style={styles.section}>
-          <Payments invoice={selectedInvoice} onInvoiceUpdated={handleInvoiceUpdated} />
+          <Payments invoice={selectedInvoice} onInvoiceUpdated={handleInvoiceUpdated} readOnly={readOnly} />
         </section>
       )}
     </div>

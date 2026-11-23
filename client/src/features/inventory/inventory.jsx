@@ -25,7 +25,7 @@ function getErrorMessage(error, fallback) {
   return error instanceof Error ? error.message : fallback;
 }
 
-function Inventory() {
+function Inventory({ readOnly = false }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -713,9 +713,9 @@ function Inventory() {
           <p>Manage products, monitor stock and track inventory levels.</p>
         </div>
 
-        <button className="primary-btn" onClick={openAddModal}>
+        {!readOnly && <button className="primary-btn" onClick={openAddModal}>
           <span>＋</span> Add Product
-        </button>
+        </button>}
       </div>
 
       {/* SUMMARY CARDS */}
@@ -874,7 +874,7 @@ function Inventory() {
                         </span>
                       </td>
 
-                      <td>
+                      {!readOnly && <td>
                         <div className="actions">
                           <button
                             className="action-btn"
@@ -899,7 +899,7 @@ function Inventory() {
                               : "Delete"}
                           </button>
                         </div>
-                      </td>
+                      </td>}
                     </tr>
                   );
                 })}
