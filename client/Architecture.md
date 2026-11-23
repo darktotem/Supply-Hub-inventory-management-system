@@ -31,9 +31,11 @@ ROUTES
     1. view inventory
     2. Add new products.
     3. Update existing products.
-    4. view supply orders/history
-    5. manage deliveries(mark orders as delivered, adding new product)(create new, patch existing)
-    6. give reports about inventory
+    4. Delete products.
+    5. Set and update stock thresholds.
+    6. view supply orders/history
+    7. manage deliveries(mark orders as delivered, adding new product)(create new, patch existing)
+    8. give reports about inventory
 
 >> SALES OFFICER (customers)
     1. view inventory
