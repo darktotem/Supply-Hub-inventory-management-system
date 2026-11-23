@@ -2,7 +2,7 @@ import { useState, useEffect} from 'react'
 import { getSuppliers, registerSupplier, deleteSupplier } from '../../api/supply'
 import './supply.css'
 
-function RegSuppliers() {
+function RegSuppliers({ readOnly = false }) {
     const [suppliers, setSuppliers] = useState([])
     const [message, setMessage] = useState('')
     const [formData, setFormData] = useState({
@@ -112,7 +112,7 @@ function RegSuppliers() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="supplier-form">
+            {!readOnly && <form onSubmit={handleSubmit} className="supplier-form">
                 <h3>Register New Supplier</h3>
 
                 <input
@@ -158,7 +158,7 @@ function RegSuppliers() {
                     required
                 />
                 <button type="submit">Register Supplier</button>
-            </form>
+            </form>}
 
             <div className="supplier-list">
                 <h3>Supplier List</h3>
@@ -189,7 +189,7 @@ function RegSuppliers() {
                                     <th>Email</th>
                                     <th>Phone</th>
                                     <th>Address</th>
-                                    <th>Actions</th>
+                                    {!readOnly && <th>Actions</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -201,7 +201,7 @@ function RegSuppliers() {
                                         <td>{supplier.email}</td>
                                         <td>{supplier.phone}</td>
                                         <td>{supplier.address}</td>
-                                        <td>
+                                        {!readOnly && <td>
                                             <button
                                                 type="button"
                                                 className="delete-btn"
@@ -209,7 +209,7 @@ function RegSuppliers() {
                                             >
                                                 Delete
                                             </button>
-                                        </td>
+                                        </td>}
                                     </tr>
                                 ))}
                             </tbody>

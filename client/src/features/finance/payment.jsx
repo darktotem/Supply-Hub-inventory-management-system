@@ -14,7 +14,7 @@ const methodLabel = (value) => methods.find((m) => m.value === value)?.label || 
 const toNumber = (value) => Number(value) || 0;
 const fmt = (value) => toNumber(value).toFixed(2);
 
-export default function Payments({ invoice, onInvoiceUpdated }) {
+export default function Payments({ invoice, onInvoiceUpdated, readOnly = false }) {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -104,7 +104,9 @@ export default function Payments({ invoice, onInvoiceUpdated }) {
         </div>
       </div>
 
-      {closed ? (
+      {readOnly ? (
+        <p style={styles.notice}>Payment entry is restricted to finance officers.</p>
+      ) : closed ? (
         <p style={styles.notice}>
           This invoice is {invoice.status}, so it can't take more payments.
         </p>

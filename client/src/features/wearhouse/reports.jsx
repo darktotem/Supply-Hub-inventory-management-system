@@ -17,7 +17,7 @@ function formatDate(value) {
       }).format(date);
 }
 
-function Reports() {
+function Reports({ readOnly = false }) {
   const [report, setReport] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,14 +94,14 @@ function Reports() {
           <h1 id="warehouse-reports-title">Inventory reports</h1>
           <p>Review current inventory health and save point-in-time reports.</p>
         </div>
-        <button
+        {!readOnly && <button
           className="warehouse-primary-button"
           type="button"
           onClick={handleSave}
           disabled={saving || loading || !report}
         >
           {saving ? "Saving report…" : "Save current report"}
-        </button>
+        </button>}
       </header>
 
       {error && <div className="warehouse-alert warehouse-alert-error" role="alert">{error}</div>}

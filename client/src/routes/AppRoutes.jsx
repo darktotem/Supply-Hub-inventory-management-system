@@ -66,7 +66,17 @@ export default function AppRoutes() {
   } else if (user.role === "finance_officer") {
     navigation = [{ href: "#invoices", label: "Invoices", page: "invoices" }];
   } else if (user.role === "auditor") {
-    navigation = [{ href: "#audit", label: "Audit Logs", page: "audit" }];
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#suppliers", label: "Suppliers", page: "suppliers" },
+      { href: "#supply-history", label: "Supply History", page: "supply-history" },
+      { href: "#customers", label: "Customers", page: "customers" },
+      { href: "#customer-orders", label: "Sales", page: "customer-orders" },
+      { href: "#invoices", label: "Financials", page: "invoices" },
+      { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
+      { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
+      { href: "#audit", label: "Audit Logs", page: "audit" },
+    ];
   } else if (isWarehouseUser) {
     navigation = [
       ...(isOperationsDirector
@@ -159,17 +169,17 @@ export default function AppRoutes() {
 
       <main className="main-content">
         {selectedPage === "employees" ? <Employees />
-          : selectedPage === "suppliers" ? <RegSuppliers />
+          : selectedPage === "suppliers" ? <RegSuppliers readOnly={user.role === "auditor"} />
             : selectedPage === "supply-orders" ? <SupplyOrders />
               : selectedPage === "supply-history" ? <History />
-                : selectedPage === "customers" ? <Customers />
-                  : selectedPage === "customer-orders" ? <CustomerOrders />
-                    : selectedPage === "inventory" ? <Inventory />
-                      : selectedPage === "invoices" ? <Invoices />
+                : selectedPage === "customers" ? <Customers readOnly={user.role === "auditor"} />
+                  : selectedPage === "customer-orders" ? <CustomerOrders readOnly={user.role === "auditor"} />
+                    : selectedPage === "inventory" ? <Inventory readOnly={user.role === "auditor"} />
+                      : selectedPage === "invoices" ? <Invoices readOnly={user.role === "auditor"} />
                         : selectedPage === "audit" ? <AuditDashboard />
-                          : selectedPage === "warehouse-products" ? <AddProduct />
-                            : selectedPage === "warehouse-deliveries" ? <Deliveries />
-                              : selectedPage === "warehouse-reports" ? <Reports />
+                          : selectedPage === "warehouse-products" ? <AddProduct readOnly={user.role === "auditor"} />
+                            : selectedPage === "warehouse-deliveries" ? <Deliveries readOnly={user.role === "auditor"} />
+                              : selectedPage === "warehouse-reports" ? <Reports readOnly={user.role === "auditor"} />
                                 : <Dashboard />}
       </main>
     </div>

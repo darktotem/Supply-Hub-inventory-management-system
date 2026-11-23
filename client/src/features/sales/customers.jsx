@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCustomers, createCustomer, deleteCustomer } from "../../api/sales";
 
-export default function Customers() {
+export default function Customers({ readOnly = false }) {
   const [customers, setCustomers] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -43,7 +43,7 @@ export default function Customers() {
     <div>
       <h1>Customers</h1>
 
-      <form onSubmit={handleSubmit}>
+      {!readOnly && <form onSubmit={handleSubmit}>
         <input
           placeholder="Name"
           value={name}
@@ -60,7 +60,7 @@ export default function Customers() {
           onChange={(e) => setPhone(e.target.value)}
         />
         <button type="submit">Add customer</button>
-      </form>
+      </form>}
 
       {message && <p>{message}</p>}
 
@@ -73,7 +73,7 @@ export default function Customers() {
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Action</th>
+              {!readOnly && <th>Action</th>}
             </tr>
           </thead>
           <tbody>
@@ -82,9 +82,9 @@ export default function Customers() {
                 <td>{c.name}</td>
                 <td>{c.email}</td>
                 <td>{c.phone}</td>
-                <td>
+                {!readOnly && <td>
                   <button onClick={() => handleDelete(c.id)}>Delete</button>
-                </td>
+                </td>}
               </tr>
             ))}
           </tbody>
