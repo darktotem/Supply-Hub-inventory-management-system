@@ -90,12 +90,6 @@ export default function AppRoutes() {
     navigation = [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }];
   }
 
-    // Make inventory available to every authenticated role.
-  navigation = [
-    { href: "#inventory", label: "Inventory", page: "inventory" },
-    ...navigation.filter((item) => item.page !== "inventory"),
-  ];
-
   const selectedPage = navigation.some((item) => item.page === activePage)
     ? activePage
     : navigation[0].page;
@@ -183,7 +177,7 @@ export default function AppRoutes() {
                   : selectedPage === "customer-orders" ? <CustomerOrders readOnly={user.role === "auditor"} />
                     : selectedPage === "inventory" ? (
                    <Inventory
-                    readOnly={!["store_worker", "operations_director"].includes(user.role)}
+                    readOnly={!["store_worker", "operations_director", "auditor"].includes(user.role)}
                     />
                    )
                       : selectedPage === "invoices" ? <Invoices readOnly={user.role === "auditor"} />
