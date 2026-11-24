@@ -53,6 +53,13 @@ class CancelOrderStatusSchema(Schema):
         validate=validate.OneOf(['Cancelled'])
     )
 
+class DeliverOrderSchema(Schema):
+    date_of_delivery = fields.Date(
+        required=True
+    )
+
+deliver_order_schema = DeliverOrderSchema()
+
 class SupplyHistorySchema(Schema):
     id = fields.Int(dump_only=True)
 
