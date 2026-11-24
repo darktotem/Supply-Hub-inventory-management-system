@@ -41,3 +41,10 @@ export function cancelSupplyOrder(orderId) {
         body: JSON.stringify({ status: "Cancelled" }),
     });
 }
+
+export function deliverSupplyOrder(orderId, deliveryDate) {
+  return api(`/deliver_order/${orderId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ date_of_delivery: deliveryDate }),
+  });
+}

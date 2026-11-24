@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getSuppliers, getInventory, getSupplyHistory,createSupplyOrder,cancelSupplyOrder} from '../../api/supply'
+import { getSuppliers, getInventory, getSupplyHistory,createSupplyOrder,cancelSupplyOrder,deliverSupplyOrder} from '../../api/supply'
 import './supply.css'
 
 function SupplyOrders() {
@@ -9,6 +9,7 @@ function SupplyOrders() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [cancelling, setCancelling] = useState(null)
+    const [delivering, setDelivering] = useState(null)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [searchTerm, setSearchTerm] = useState('')
@@ -145,6 +146,38 @@ function SupplyOrders() {
             setError(error.message)
         } finally {
             setCancelling(null)
+        }
+    }
+
+    // Mark Supply order as delivered
+    const handleDeliver = async (id) => {
+        try {
+            setDelivering(id)
+            setSuccess('')
+
+            const today = new Date()
+            const deliveryDate = [
+                 today.getFullYear(),
+                 String(today.getMonth() + 1).padStart(2, '0'),
+                 String(today.getDate()).padStart(2, '0')
+            ].join('-')
+
+            await deliverSupplyOrder(id, deliveryDate)
+
+            setOrders((previousOrders) => 
+              previousOrders.map((order) =>
+                order.id === id
+                 ? { ...order, status: 'Delivered', date_of_delivery: deliveryDate }
+                 : order
+              )
+            )
+
+            setError('')
+            setSuccess('Supply order marked as delivered successfully!')
+        } catch (error) {
+            setError(error.message)
+        } finally {
+            setDelivering(null)
         }
     }
 
@@ -348,14 +381,24 @@ function SupplyOrders() {
                                         </td>
                                         <td>
                                             {order.status === 'Pending' && (
-                                                <button
-                                                    type="button"
-                                                    className="cancel-btn"
-                                                    onClick={() => handleCancel(order.id)}
-                                                    disabled={cancelling === order.id}
-                                                >
-                                                    {cancelling === order.id ? 'Cancelling...' : 'Cancel'}
-                                                </button>
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        className="cancel-btn"
+                                                        onClick={() => handleCancel(order.id)}
+                                                        disabled={cancelling === order.id || delivering === order.id}
+                                                    >
+                                                        {cancelling === order.id ? 'Cancelling...' : 'Cancel'}
+                                                    </button>
+
+                                                    <button
+                                                         type="button"
+                                                         onClick={() => handleDeliver(order.id)}
+                                                         disabled={cancelling === order.id || delivering === order.id}
+                                                    >
+                                                         {delivering === order.id ? 'Updating...' : 'Mark as Delivered'}
+                                                    </button>
+                                                </>
                                             )}
                                         </td>
                                     </tr>
