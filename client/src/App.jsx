@@ -1,11 +1,11 @@
-import React from "react";
-import Invoices from "./routes/AppRoutes";
-import Customers from "./features/sales/customers";
+import React from "react"
+import AppRoutes from "./routes/AppRoutes";
+import "./App.css";
 function App() {
 
   return (
     <>
-      <Customers />
+        <AppRoutes />
     </>
   )
 }

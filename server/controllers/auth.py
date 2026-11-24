@@ -77,6 +77,9 @@ def change_password():
     if err:
         return err
 
+    if data["new_password"] != data["confirm_password"]:
+        return {"error": "Passwords do not match"}, 400
+
     user = current_user()
     if not user.check_password(data["old_password"]):
         return {"error": "Current password is incorrect"}, 400
@@ -175,7 +178,7 @@ def verify_recovery_code():
 
     user.clear_recovery_code()       # the code works only once
     db.session.commit()
-    return {"reset_token": create_reset_token(user), "expires_in_minutes": 10}
+    return {"reset_token": create_reset_token(user), "expires_in_seconds": 60}
 
 
 @auth_bp.post("/api/set_new_password")

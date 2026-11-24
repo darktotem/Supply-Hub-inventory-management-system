@@ -1,12 +1,10 @@
 from datetime import datetime, timedelta, timezone
-
 import jwt
 from flask import current_app
 
 
 def _secret_key():
 	return current_app.config.get("JWT_SECRET_KEY") or current_app.secret_key
-
 
 def _encode(payload):
 	return jwt.encode(payload, _secret_key(), algorithm="HS256")
@@ -51,10 +49,9 @@ def create_reset_token(user):
 		"typ": "password_reset",
 		"pwd": user.password_hash[-12:],
 		"iat": now,
-		"exp": now + timedelta(minutes=10),
+		"exp": now + timedelta(seconds=60),
 	}
 	return _encode(payload)
-
 
 def decode_reset_token(token):
 	"""Decode a password-reset token; rejects access tokens and other JWTs."""

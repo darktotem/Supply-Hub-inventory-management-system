@@ -1,8 +1,16 @@
+<<<<<<<< HEAD:server/migrations/versions/d46c94488788_initial_table_creations.py
 """initial table creations
 
 Revision ID: d46c94488788
 Revises: 
 Create Date: 2026-11-20 15:55:16.039066
+========
+"""initial tables
+
+Revision ID: befd303f4973
+Revises: 
+Create Date: 2026-11-21 11:27:41.340553
+>>>>>>>> 9fd9a523c2294e39319d3ad5230e2ede3975b4c9:server/migrations/versions/befd303f4973_initial_tables.py
 
 """
 from alembic import op
@@ -10,7 +18,11 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
+<<<<<<<< HEAD:server/migrations/versions/d46c94488788_initial_table_creations.py
 revision = 'd46c94488788'
+========
+revision = 'befd303f4973'
+>>>>>>>> 9fd9a523c2294e39319d3ad5230e2ede3975b4c9:server/migrations/versions/befd303f4973_initial_tables.py
 down_revision = None
 branch_labels = None
 depends_on = None

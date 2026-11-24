@@ -1,6 +1,6 @@
 from datetime import date
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, g, jsonify, request
 from marshmallow import ValidationError
 from sqlalchemy import update
 
@@ -64,6 +64,10 @@ def warehouse_products():
     if request.method == "GET":
         products = Inventory.query.order_by(Inventory.product_name.asc()).all()
         return jsonify([_inventory_to_dict(item) for item in products]), 200
+
+    user = g.authenticated_user
+    if user.role not in (Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR):
+        return jsonify({"error": "You do not have permission to access this resource"}), 403
 
     data = request.get_json(silent=True)
     if data is None:

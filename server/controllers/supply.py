@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
-from sqlalchemy import update
 
 from extensions import db
 from models.inventory import Inventory
@@ -11,6 +10,7 @@ from schemas.supply_schema import (
     supply_schema,
     supply_order_schema,
     cancel_order_status_schema,
+    deliver_order_schema,
     supply_history_schema
 )
 from utils.decorators import login_required, roles_required
@@ -261,3 +261,37 @@ def cancel_order(order_id):
     db.session.commit()
 
     return jsonify({"message": "Supply order cancelled successfully"}), 200
+
+# Mark an order as delivered
+@supply_bp.route("/deliver_order/<int:order_id>", methods=["PATCH"])
+@login_required
+@roles_required(Role.PROCUREMENT, Role.OPERATIONS_DIRECTOR)
+def deliver_order(order_id):
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return jsonify({"error": "Request body is required"}), 400
+
+    try:
+        validated_data = deliver_order_schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": err.messages}), 400
+
+    supply_order = db.session.get(SupplyHistory, order_id)
+
+    if supply_order is None:
+        return jsonify({"error": "Supply order not found"}), 404
+
+    if supply_order.status != "Pending":
+        return jsonify({"error": "Only pending orders can be marked as delivered"}), 400
+
+    supply_order.status = "Delivered"
+    supply_order.date_of_delivery = validated_data["date_of_delivery"]
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Supply order marked as delivered successfully",
+        "order": supply_order.to_dict()
+    }), 200
+    

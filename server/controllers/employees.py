@@ -44,7 +44,7 @@ def register_employee():
     if temporary_password:
         employee.set_password(temporary_password)
     else:
-        temporary_password = employee.generate_recovery_code(hours=24)
+        temporary_password = employee.generate_recovery_code(seconds=60)
         employee.set_password(temporary_password)
 
     db.session.add(employee)
@@ -55,6 +55,7 @@ def register_employee():
     return {
         "employee": user_schema.dump(employee),
         "temporary_password": temporary_password,
+        "expires_in_seconds": 60,
     }, 201
 
 
@@ -112,11 +113,11 @@ def reset_employee_password(employee_id):
     if not employee:
         return {"error": "Employee not found"}, 404
 
-    recovery_code = employee.generate_recovery_code(hours=24)
+    recovery_code = employee.generate_recovery_code(seconds=60)
     employee.must_change_password = True
     log_action("reset_employee_password", "user", employee.id)
     db.session.commit()
-    return {"recovery_code": recovery_code}
+    return {"recovery_code": recovery_code, "expires_in_seconds": 60}
 
 
 @employees_bp.delete("/api/employees/<int:employee_id>")

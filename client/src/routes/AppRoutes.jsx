@@ -1,8 +1,19 @@
 import { useState } from "react";
 import Login, { roleNames } from "../features/auth/login";
+import History from "../features/supply/history";
+import RegSuppliers from "../features/supply/reg_suppliers";
+import SupplyOrders from "../features/supply/supply_orders";
+import Customers from "../features/sales/customers";
+import CustomerOrders from "../features/sales/customer_orders";
 import Employees from "../features/admin/employees";
 import Dashboard from "../features/admin/dashboard";
-import { changePassword, clearSession } from "../api/auth";
+import Inventory from "../features/inventory/inventory";
+import Invoices from "../features/finance/invoices";
+import AuditDashboard from "../features/auditor/audit_dashboard";
+import AddProduct from "../features/warehouse/add_product";
+import Deliveries from "../features/warehouse/deliveries";
+import Reports from "../features/warehouse/reports";
+import { changePassword, clearSession, getSavedToken, getSavedUser } from "../api/auth";
 
 /**
  * @typedef {{
@@ -19,28 +30,174 @@ import { changePassword, clearSession } from "../api/auth";
 
 export default function AppRoutes() {
   const [user, setUser] = /** @type {[AuthUser | null, import("react").Dispatch<import("react").SetStateAction<AuthUser | null>>]} */ (
-    useState(/** @type {AuthUser | null} */ (null))
+    useState(/** @type {AuthUser | null} */ (
+      getSavedToken() ? getSavedUser() : null
+    ))
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activePage, setActivePage] = useState(
+    getSavedUser()?.role === "it_admin" ? "employees" : "dashboard"
   );
 
   if (!user) return <Login onAuthenticated={setUser} />;
 
   if (user.must_change_password) {
-    return <RequiredPasswordChange user={user} onChanged={(updatedUser) => setUser(updatedUser)} />;
+    return (
+      <RequiredPasswordChange
+        user={user}
+        onChanged={(updatedUser) => setUser(updatedUser)}
+      />
+    );
+  }
+
+  const isOperationsDirector = user.role === "operations_director";
+  const isWarehouseUser = ["store_worker", "operations_director"].includes(user.role);
+  let navigation;
+  if (user.role === "it_admin") {
+    navigation = [{ href: "#employees", label: "Employees", page: "employees" }];
+  } else if (user.role === "procurement_officer") {
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#suppliers", label: "Suppliers", page: "suppliers" },
+      { href: "#supply-orders", label: "Supply Orders", page: "supply-orders" },
+      { href: "#supply-history", label: "Supply History", page: "supply-history" },
+    ];
+  } else if (user.role === "sales_officer") {
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#customers", label: "Customers", page: "customers" },
+      { href: "#customer-orders", label: "Customer Orders", page: "customer-orders" },
+    ];
+  } else if (user.role === "finance_officer") {
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#invoices", label: "Invoices", page: "invoices" },
+    ];
+  } else if (user.role === "auditor") {
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#suppliers", label: "Suppliers", page: "suppliers" },
+      { href: "#supply-history", label: "Supply History", page: "supply-history" },
+      { href: "#customers", label: "Customers", page: "customers" },
+      { href: "#customer-orders", label: "Sales", page: "customer-orders" },
+      { href: "#invoices", label: "Financials", page: "invoices" },
+      { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
+      { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
+      { href: "#audit", label: "Audit Logs", page: "audit" },
+    ];
+  } else if (isWarehouseUser) {
+    navigation = [
+      ...(isOperationsDirector
+        ? [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]
+        : []),
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#warehouse-products", label: "Products", page: "warehouse-products" },
+      { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
+      { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
+    ];
+  } else {
+    navigation = [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }];
+  }
+
+  const selectedPage =
+    activePage === "inventory" && user.role === "it_admin"
+      ? "employees"
+      : navigation.some((item) => item.page === activePage)
+        ? activePage
+        : navigation[0].page;
+
+  function signOut() {
+    clearSession();
+    setMobileMenuOpen(false);
+    setUser(null);
   }
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">SH</span><strong>Supply Hub</strong></div>
-        <nav>
-          {user.role === "it_admin" && <a href="#employees" className="active">Employees</a>}
-          {user.role !== "it_admin" && <a href="#dashboard" className="active">Dashboard</a>}
+      <header className="navbar">
+        <div className="brand">
+          <span className="brand-mark">SH</span>
+          <strong>Supply Hub</strong>
+        </div>
+
+        <nav className="navbar-links" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className={selectedPage === item.page ? "active" : ""}
+              onClick={() => setActivePage(item.page)}
+            >
+              {item.label}
+            </a>
+          ))}
         </nav>
-        <button className="logout-button" onClick={() => { clearSession(); setUser(null); }}>Sign out</button>
+
+        <div className="navbar-user">
+          <div>
+            <strong>{user.name}</strong>
+            <span>{/** @type {Record<string, string>} */ (roleNames)[user.role] || user.role}</span>
+          </div>
+          <button className="logout-button" type="button" onClick={signOut}>Sign out</button>
+        </div>
+
+        <button
+          className="hamburger-button"
+          type="button"
+          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          <span></span><span></span><span></span>
+        </button>
+      </header>
+
+      <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`} aria-hidden={!mobileMenuOpen}>
+        <nav aria-label="Mobile navigation">
+          {navigation.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className={selectedPage === item.page ? "active" : ""}
+              onClick={() => {
+                setActivePage(item.page);
+                setMobileMenuOpen(false);
+              }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+        <button className="logout-button" type="button" onClick={signOut}>Sign out</button>
       </aside>
+
+      {mobileMenuOpen && (
+        <button
+          className="sidebar-overlay"
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       <main className="main-content">
-        <header className="topbar"><div><strong>{user.name}</strong><span>{/** @type {Record<string, string>} */ (roleNames)[user.role] || user.role}</span></div></header>
-        {user.role === "it_admin" ? <Employees /> : <Dashboard />}
+        {selectedPage === "employees" ? <Employees />
+          : selectedPage === "suppliers" ? <RegSuppliers readOnly={user.role === "auditor"} />
+            : selectedPage === "supply-orders" ? <SupplyOrders />
+              : selectedPage === "supply-history" ? <History />
+                : selectedPage === "customers" ? <Customers readOnly={user.role === "auditor"} />
+                  : selectedPage === "customer-orders" ? <CustomerOrders readOnly={user.role === "auditor"} />
+                   : selectedPage === "inventory" && user.role !== "it_admin" ? (
+                   <Inventory
+                   readOnly={["finance_officer", "auditor"].includes(user.role)}
+                    />
+                   )
+                      : selectedPage === "invoices" ? <Invoices readOnly={user.role === "auditor"} />
+                        : selectedPage === "audit" ? <AuditDashboard />
+                          : selectedPage === "warehouse-products" ? <AddProduct readOnly={user.role === "auditor"} />
+                            : selectedPage === "warehouse-deliveries" ? <Deliveries readOnly={user.role === "auditor"} />
+                              : selectedPage === "warehouse-reports" ? <Reports readOnly={user.role === "auditor"} />
+                                : <Dashboard />}
       </main>
     </div>
   );
@@ -50,6 +207,10 @@ export default function AppRoutes() {
 function RequiredPasswordChange({ user, onChanged }) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -58,8 +219,9 @@ function RequiredPasswordChange({ user, onChanged }) {
     event.preventDefault();
     setBusy(true);
     setError("");
+
     try {
-      await changePassword(oldPassword, newPassword);
+      await changePassword(oldPassword, newPassword, confirmPassword);
       onChanged({ ...user, must_change_password: false });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to change password");
@@ -73,14 +235,63 @@ function RequiredPasswordChange({ user, onChanged }) {
       <section className="auth-card">
         <p className="eyebrow">Security</p>
         <h1>Change your password</h1>
-        <p className="form-help">Your administrator requires a new password before you continue.</p>
+        <p className="form-help">
+          Your administrator requires a new password before you continue.
+        </p>
+
         {error && <div className="alert alert-error">{error}</div>}
+
         <form onSubmit={submit}>
           <label htmlFor="old-password">Current password</label>
-          <input id="old-password" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} required />
+          <div className="password-field">
+            <input
+              id="old-password"
+              type={showOldPassword ? "text" : "password"}
+              value={oldPassword}
+              onChange={(event) => setOldPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+            <button className="password-toggle" type="button" aria-label={showOldPassword ? "Hide current password" : "Show current password"} aria-pressed={showOldPassword} onClick={() => setShowOldPassword((visible) => !visible)}>
+              {showOldPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+
           <label htmlFor="required-new-password">New password</label>
-          <input id="required-new-password" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} required />
-          <button className="primary-button" type="submit" disabled={busy}>{busy ? "Updating…" : "Continue"}</button>
+          <div className="password-field">
+            <input
+              id="required-new-password"
+              type={showNewPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+            <button className="password-toggle" type="button" aria-label={showNewPassword ? "Hide new password" : "Show new password"} aria-pressed={showNewPassword} onClick={() => setShowNewPassword((visible) => !visible)}>
+              {showNewPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+
+          <label htmlFor="required-confirm-password">Confirm new password</label>
+          <div className="password-field">
+            <input
+              id="required-confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+            <button className="password-toggle" type="button" aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"} aria-pressed={showConfirmPassword} onClick={() => setShowConfirmPassword((visible) => !visible)}>
+              {showConfirmPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+
+          <button className="primary-button" type="submit" disabled={busy}>
+            {busy ? "Updating…" : "Continue"}
+          </button>
         </form>
       </section>
     </main>

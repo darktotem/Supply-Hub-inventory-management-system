@@ -21,11 +21,11 @@ export function login(username, password) {
   });
 }
 
-/** @param {string} oldPassword @param {string} newPassword @returns {Promise<{ message: string }>} */
-export function changePassword(oldPassword, newPassword) {
+/** @param {string} oldPassword @param {string} newPassword @param {string} confirmPassword @returns {Promise<{ message: string }>} */
+export function changePassword(oldPassword, newPassword, confirmPassword) {
   return api("/api/change_password", {
     method: "PATCH",
-    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword, confirm_password: confirmPassword }),
   });
 }
 
@@ -37,7 +37,7 @@ export function changeUsername(username, password) {
   });
 }
 
-/** @param {string} username @param {string} recoveryCode @returns {Promise<{ reset_token: string, expires_in_minutes: number }>} */
+/** @param {string} username @param {string} recoveryCode @returns {Promise<{ reset_token: string, expires_in_seconds: number }>} */
 export function verifyRecoveryCode(username, recoveryCode) {
   return api("/api/verify_recovery_code", {
     method: "POST",

@@ -1,5 +1,10 @@
-
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getInventory,
+  createInventory,
+  updateInventory,
+  deleteInventory,
+} from "../../api/inventory";
 
 const initialForm = {
   product_name: "",
@@ -9,131 +14,144 @@ const initialForm = {
   price: "",
 };
 
-/**
- * @typedef {Object} Product
- * @property {number} id
- * @property {string} product_name
- * @property {string} category
- * @property {number} quantity
- * @property {number} threshold
- * @property {number} price
- */
-
-/**
- * @typedef {Object} ProductForm
- * @property {string} product_name
- * @property {string} category
- * @property {string} quantity
- * @property {string} threshold
- * @property {string} price
- */
-
-/**
- * @param {number|string} price
- */
 function formatPrice(price) {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-KE", {
     style: "currency",
-    currency: "USD",
+    currency: "KSH",
   }).format(Number(price || 0));
 }
 
-function Inventory() {
-  const [products, setProducts] = useState(
-    /** @type {Product[]} */ ([])
-  );
+function getErrorMessage(error, fallback) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function Inventory({ readOnly = false }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
 
   const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [form, setForm] = useState({ ...initialForm });
 
-  const [editingProduct, setEditingProduct] = useState(
-    /** @type {Product | null} */ (null)
-  );
+  // Fetch inventory from Flask when the page loads.
+  useEffect(() => {
+    let cancelled = false;
 
-  const [form, setForm] = useState(
-    /** @type {ProductForm} */ (initialForm)
-  );
+    async function loadInventory() {
+      setLoading(true);
+      setError("");
 
-  // Get unique product categories
+      try {
+        const data = await getInventory();
+
+        if (!cancelled) {
+          setProducts(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(getErrorMessage(err, "Failed to load inventory."));
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadInventory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Get unique categories.
   const categories = useMemo(() => {
-    return [...new Set(products.map((product) => product.category))]
-      .filter(Boolean)
-      .sort();
+    return [
+      ...new Set(products.map((product) => product.category).filter(Boolean)),
+    ].sort();
   }, [products]);
 
-  // Search and filter products
+  // Search and filter products.
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const matchesSearch = product.product_name
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const productName = String(product.product_name || "").toLowerCase();
+
+      const matchesSearch = productName.includes(search.toLowerCase());
 
       const matchesCategory =
         category === "all" || product.category === category;
 
       const matchesStock =
         stockFilter === "all" ||
-        (stockFilter === "available" && product.quantity > product.threshold) ||
-        (stockFilter === "low" && product.quantity <= product.threshold) ||
+        (stockFilter === "available" &&
+          product.quantity > product.threshold) ||
+        (stockFilter === "low" &&
+          product.quantity > 0 &&
+          product.quantity <= product.threshold) ||
         (stockFilter === "out" && product.quantity === 0);
 
       return matchesSearch && matchesCategory && matchesStock;
     });
   }, [products, search, category, stockFilter]);
 
-  // Inventory statistics
+  // Inventory statistics.
   const totalProducts = products.length;
 
   const totalStock = products.reduce(
-    (total, product) => total + product.quantity,
+    (total, product) => total + Number(product.quantity || 0),
     0
   );
 
   const lowStockProducts = products.filter(
-    (product) => product.quantity <= product.threshold
+    (product) =>
+      Number(product.quantity) > 0 &&
+      Number(product.quantity) <= Number(product.threshold)
   ).length;
 
   const outOfStockProducts = products.filter(
-    (product) => product.quantity === 0
+    (product) => Number(product.quantity) === 0
   ).length;
 
   const inventoryValue = products.reduce(
-    (total, product) => total + product.price * product.quantity,
+    (total, product) =>
+      total +
+      Number(product.price || 0) * Number(product.quantity || 0),
     0
   );
 
-  // Open add product modal
+  // Open add product modal.
   const openAddModal = () => {
     setEditingProduct(null);
     setForm({ ...initialForm });
+    setError("");
     setShowModal(true);
   };
 
-  // Open edit product modal
-  /**
-   * @param {Product} product
-   */
+  // Open edit product modal.
   const openEditModal = (product) => {
     setEditingProduct(product);
 
     setForm({
-      product_name: product.product_name,
-      category: product.category,
-      quantity: String(product.quantity),
-      threshold: String(product.threshold),
-      price: String(product.price),
+      product_name: product.product_name || "",
+      category: product.category || "",
+      quantity: String(product.quantity ?? ""),
+      threshold: String(product.threshold ?? "10"),
+      price: String(product.price ?? ""),
     });
 
+    setError("");
     setShowModal(true);
   };
 
-  // Handle form input
-  /**
-   * @param {React.ChangeEvent<HTMLInputElement>} event
-   */
+  // Handle form input changes.
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -143,11 +161,8 @@ function Inventory() {
     }));
   };
 
-  // Add or update product
-  /**
-   * @param {React.FormEvent<HTMLFormElement>} event
-   */
-  const handleSubmit = (event) => {
+  // Add or update a product through the backend.
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const productData = {
@@ -171,60 +186,74 @@ function Inventory() {
       !Number.isFinite(productData.price) ||
       productData.price < 0
     ) {
-      alert("Please enter valid product details.");
+      setError("Please enter valid product details.");
       return;
     }
 
-    if (editingProduct) {
-      setProducts((previous) =>
-        previous.map((product) =>
-          product.id === editingProduct.id
-            ? { ...product, ...productData }
-            : product
-        )
-      );
-    } else {
-      const newProduct = {
-        id: Date.now(),
-        ...productData,
-      };
+    setSaving(true);
+    setError("");
 
-      setProducts((previous) => [newProduct, ...previous]);
+    try {
+      if (editingProduct) {
+        const updatedProduct = await updateInventory(
+          editingProduct.id,
+          productData
+        );
+
+        setProducts((previous) =>
+          previous.map((product) =>
+            product.id === editingProduct.id
+              ? updatedProduct
+              : product
+          )
+        );
+      } else {
+        const createdProduct = await createInventory(productData);
+
+        setProducts((previous) => [createdProduct, ...previous]);
+      }
+
+      setShowModal(false);
+      setEditingProduct(null);
+      setForm({ ...initialForm });
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not save the product."));
+    } finally {
+      setSaving(false);
     }
-
-    setShowModal(false);
-    setEditingProduct(null);
-    setForm({ ...initialForm });
   };
 
-  // Delete product
-  /**
-   * @param {number} id
-   * @param {string} productName
-   */
-  const handleDelete = (id, productName) => {
+  // Delete a product through the backend.
+  const handleDelete = async (id, productName) => {
     const confirmed = window.confirm(
       `Are you sure you want to delete "${productName}"?`
     );
 
     if (!confirmed) return;
 
-    setProducts((previous) =>
-      previous.filter((product) => product.id !== id)
-    );
+    setDeletingId(id);
+    setError("");
+
+    try {
+      await deleteInventory(id);
+
+      setProducts((previous) =>
+        previous.filter((product) => product.id !== id)
+      );
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not delete the product."));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
-  // Stock status
-  /**
-   * @param {number} quantity
-   * @param {number} threshold
-   */
+  // Determine stock status.
   const getStockStatus = (quantity, threshold) => {
-    if (quantity === 0) {
+    if (Number(quantity) === 0) {
       return { label: "Out of stock", className: "out" };
     }
 
-    if (quantity <= threshold) {
+    if (Number(quantity) <= Number(threshold)) {
       return { label: "Low stock", className: "low" };
     }
 
@@ -286,6 +315,11 @@ function Inventory() {
 
         .sf-inventory .primary-btn:hover {
           background: #166534;
+        }
+
+        .sf-inventory button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .sf-inventory .stats-grid {
@@ -525,6 +559,15 @@ function Inventory() {
           color: #263247;
         }
 
+        .sf-inventory .error-message {
+          margin: 0 20px 16px;
+          padding: 11px 13px;
+          border-radius: 8px;
+          background: #fee2e2;
+          color: #991b1b;
+          font-size: 13px;
+        }
+
         .sf-inventory .modal-backdrop {
           position: fixed;
           inset: 0;
@@ -670,9 +713,9 @@ function Inventory() {
           <p>Manage products, monitor stock and track inventory levels.</p>
         </div>
 
-        <button className="primary-btn" onClick={openAddModal}>
+        {!readOnly && <button className="primary-btn" onClick={openAddModal}>
           <span>＋</span> Add Product
-        </button>
+        </button>}
       </div>
 
       {/* SUMMARY CARDS */}
@@ -740,6 +783,7 @@ function Inventory() {
             onChange={(event) => setCategory(event.target.value)}
           >
             <option value="all">All Categories</option>
+
             {categories.map((item) => (
               <option value={item} key={item}>
                 {item}
@@ -758,11 +802,22 @@ function Inventory() {
           </select>
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {/* API ERROR */}
+        {error && (
+          <div className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+
+        {/* LOADING / EMPTY STATE / TABLE */}
+        {loading ? (
+          <div className="empty-state">Loading inventory...</div>
+        ) : filteredProducts.length === 0 ? (
           <div className="empty-state">
             <h3>
               {products.length === 0 ? "No products yet" : "No products found"}
             </h3>
+
             <p>
               {products.length === 0
                 ? "Add your first product to get started."
@@ -780,7 +835,7 @@ function Inventory() {
                   <th>QUANTITY</th>
                   <th>THRESHOLD</th>
                   <th>STATUS</th>
-                  <th>ACTIONS</th>
+                  {!readOnly && <th>ACTIONS</th>}
                 </tr>
               </thead>
 
@@ -802,6 +857,7 @@ function Inventory() {
                       </td>
 
                       <td>{product.category}</td>
+
                       <td>{formatPrice(product.price)}</td>
 
                       <td>
@@ -818,11 +874,12 @@ function Inventory() {
                         </span>
                       </td>
 
-                      <td>
+                      {!readOnly && <td>
                         <div className="actions">
                           <button
                             className="action-btn"
                             onClick={() => openEditModal(product)}
+                            disabled={deletingId === product.id}
                           >
                             Edit
                           </button>
@@ -830,13 +887,19 @@ function Inventory() {
                           <button
                             className="action-btn delete"
                             onClick={() =>
-                              handleDelete(product.id, product.product_name)
+                              handleDelete(
+                                product.id,
+                                product.product_name
+                              )
                             }
+                            disabled={deletingId === product.id}
                           >
-                            Delete
+                            {deletingId === product.id
+                              ? "Deleting..."
+                              : "Delete"}
                           </button>
                         </div>
-                      </td>
+                      </td>}
                     </tr>
                   );
                 })}
@@ -857,7 +920,7 @@ function Inventory() {
         <div
           className="modal-backdrop"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
+            if (event.target === event.currentTarget && !saving) {
               setShowModal(false);
             }
           }}
@@ -871,6 +934,7 @@ function Inventory() {
               <button
                 className="close-btn"
                 onClick={() => setShowModal(false)}
+                disabled={saving}
                 aria-label="Close modal"
               >
                 ×
@@ -879,8 +943,9 @@ function Inventory() {
 
             <form className="modal-form" onSubmit={handleSubmit}>
               <div className="form-field full">
-                <label>Product Name *</label>
+                <label htmlFor="product_name">Product Name *</label>
                 <input
+                  id="product_name"
                   name="product_name"
                   value={form.product_name}
                   onChange={handleChange}
@@ -891,8 +956,9 @@ function Inventory() {
               </div>
 
               <div className="form-field full">
-                <label>Category *</label>
+                <label htmlFor="category">Category *</label>
                 <input
+                  id="category"
                   name="category"
                   value={form.category}
                   onChange={handleChange}
@@ -903,8 +969,9 @@ function Inventory() {
               </div>
 
               <div className="form-field">
-                <label>Price (USD) *</label>
+                <label htmlFor="price">Price (KSH) *</label>
                 <input
+                  id="price"
                   type="number"
                   name="price"
                   value={form.price}
@@ -916,8 +983,9 @@ function Inventory() {
               </div>
 
               <div className="form-field">
-                <label>Stock Quantity *</label>
+                <label htmlFor="quantity">Stock Quantity *</label>
                 <input
+                  id="quantity"
                   type="number"
                   name="quantity"
                   value={form.quantity}
@@ -929,8 +997,9 @@ function Inventory() {
               </div>
 
               <div className="form-field full">
-                <label>Low Stock Threshold *</label>
+                <label htmlFor="threshold">Low Stock Threshold *</label>
                 <input
+                  id="threshold"
                   type="number"
                   name="threshold"
                   value={form.threshold}
@@ -945,13 +1014,25 @@ function Inventory() {
                 <button
                   type="button"
                   className="cancel-btn"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setError("");
+                  }}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
 
-                <button type="submit" className="primary-btn">
-                  {editingProduct ? "Save Changes" : "Add Product"}
+                <button
+                  type="submit"
+                  className="primary-btn"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editingProduct
+                      ? "Save Changes"
+                      : "Add Product"}
                 </button>
               </div>
             </form>
