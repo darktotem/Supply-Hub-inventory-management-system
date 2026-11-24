@@ -10,9 +10,9 @@ import Dashboard from "../features/admin/dashboard";
 import Inventory from "../features/inventory/inventory";
 import Invoices from "../features/finance/invoices";
 import AuditDashboard from "../features/auditor/audit_dashboard";
-import AddProduct from "../features/wearhouse/add_product";
-import Deliveries from "../features/wearhouse/deliveries";
-import Reports from "../features/wearhouse/reports";
+import AddProduct from "../features/warehouse/add_product";
+import Deliveries from "../features/warehouse/deliveries";
+import Reports from "../features/warehouse/reports";
 import { changePassword, clearSession, getSavedToken, getSavedUser } from "../api/auth";
 
 /**
