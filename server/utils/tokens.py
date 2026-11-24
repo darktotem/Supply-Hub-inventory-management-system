@@ -49,7 +49,7 @@ def create_reset_token(user):
 		"typ": "password_reset",
 		"pwd": user.password_hash[-12:],
 		"iat": now,
-		"exp": now + timedelta(minutes=10),
+		"exp": now + timedelta(seconds=60),
 	}
 	return _encode(payload)
 

@@ -50,7 +50,9 @@ def test_employee_update_access_reset_and_delete(client, database, it_admin_user
         headers=it_admin_user["headers"],
     )
     assert response.status_code == 200
-    assert response.get_json()["recovery_code"]
+    recovery = response.get_json()
+    assert recovery["recovery_code"]
+    assert recovery["expires_in_seconds"] == 60
 
     response = client.delete(
         f"/api/employees/{employee_id}",

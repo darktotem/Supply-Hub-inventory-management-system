@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   login,
   saveSession,
@@ -31,6 +31,23 @@ export default function Login({ onAuthenticated }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resetExpiresAt, setResetExpiresAt] = useState(0);
+  const [resetSeconds, setResetSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!resetExpiresAt) {
+      setResetSeconds(0);
+      return undefined;
+    }
+
+    const updateCountdown = () => {
+      setResetSeconds(Math.max(0, Math.ceil((resetExpiresAt - Date.now()) / 1000)));
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [resetExpiresAt]);
 
   function resetMessage() {
     setError("");
@@ -61,6 +78,7 @@ export default function Login({ onAuthenticated }) {
     try {
       const data = await verifyRecoveryCode(username.trim(), recoveryCode);
       setResetToken(data.reset_token);
+      setResetExpiresAt(Date.now() + (data.expires_in_seconds || 60) * 1000);
       setMode("reset");
       setNotice("Recovery code accepted. Choose a new password.");
     } catch (err) {
@@ -139,6 +157,11 @@ export default function Login({ onAuthenticated }) {
 
         {mode === "reset" && (
           <form onSubmit={handleReset}>
+            <p className="form-help">
+              {resetSeconds > 0
+                ? `Reset session: ${resetSeconds} second${resetSeconds === 1 ? "" : "s"} remaining. It expires automatically.`
+                : "This reset session has expired. Return and request a new recovery code from IT."}
+            </p>
             <label htmlFor="new-password">New password</label>
             <div className="password-field">
               <input id="new-password" type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
@@ -153,7 +176,8 @@ export default function Login({ onAuthenticated }) {
                 {showConfirmPassword ? "Hide" : "Show"}
               </button>
             </div>
-            <button className="primary-button" type="submit" disabled={busy}>{busy ? "Updating…" : "Update password"}</button>
+            <button className="primary-button" type="submit" disabled={busy || resetSeconds === 0}>{busy ? "Updating…" : "Update password"}</button>
+            {resetSeconds === 0 && <button className="text-button" type="button" onClick={() => { resetMessage(); setResetToken(""); setResetExpiresAt(0); setMode("recovery"); }}>Request another code</button>}
           </form>
         )}
       </section>

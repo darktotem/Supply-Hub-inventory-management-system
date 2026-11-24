@@ -21,7 +21,8 @@ export default function Employees() {
   const [editing, setEditing] = useState(/** @type {Employee | null} */(null));
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [recovery, setRecovery] = useState(/** @type {{ username: string, code: string } | null} */(null));
+  const [recovery, setRecovery] = useState(/** @type {{ username: string, code: string, expiresAt: number } | null} */(null));
+  const [recoverySeconds, setRecoverySeconds] = useState(0);
   const [showTemporaryPassword, setShowTemporaryPassword] = useState(false);
 
   async function loadEmployees() {
@@ -35,6 +36,22 @@ export default function Employees() {
   }
 
   useEffect(() => { loadEmployees(); }, []);
+
+  useEffect(() => {
+    if (!recovery) {
+      setRecoverySeconds(0);
+      return undefined;
+    }
+
+    const updateCountdown = () => {
+      const seconds = Math.max(0, Math.ceil((recovery.expiresAt - Date.now()) / 1000));
+      setRecoverySeconds(seconds);
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [recovery]);
 
   /** @param {import("react").ChangeEvent<HTMLInputElement | HTMLSelectElement>} event */
   function updateField(event) {
@@ -59,7 +76,7 @@ export default function Employees() {
           body: JSON.stringify(form),
         });
         setNotice(data.temporary_password
-          ? `Employee created. Temporary password: ${data.temporary_password}`
+          ? `Employee created. Recovery code (valid 60 seconds): ${data.temporary_password}`
           : "Employee created.");
       }
       setForm(emptyForm);
@@ -99,7 +116,11 @@ export default function Employees() {
     setRecovery(null);
     try {
       const data = await api(`/api/employees/${employee.id}/reset_password`, { method: "POST" });
-      setRecovery({ username: employee.username, code: data.recovery_code });
+      setRecovery({
+        username: employee.username,
+        code: data.recovery_code,
+        expiresAt: Date.now() + (data.expires_in_seconds || 60) * 1000,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to reset password");
     }
@@ -138,7 +159,11 @@ export default function Employees() {
           <div>
             <strong>Recovery code for {recovery.username}</strong>
             <code>{recovery.code}</code>
-            <small>Valid for 24 hours. The code is shown only once; copy it or issue it to the staff member now.</small>
+            <small>
+              {recoverySeconds > 0
+                ? `Expires in ${recoverySeconds} second${recoverySeconds === 1 ? "" : "s"}. Give this code to the staff member now.`
+                : "This code has expired. Generate another code to retry."}
+            </small>
           </div>
           <button type="button" className="secondary-button" onClick={copyRecoveryCode}>Copy code</button>
           <button type="button" className="secondary-button" onClick={() => setRecovery(null)}>Close</button>

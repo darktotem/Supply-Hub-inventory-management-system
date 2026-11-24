@@ -52,11 +52,12 @@ class User(db.Model):
     def check_password(self, raw):
         return _matches(self.password_hash, raw)
 
-    def generate_recovery_code(self, hours=24):
+    def generate_recovery_code(self, hours=None, seconds=60):
         """Returns the plain code (shown once). Only the hash is stored."""
         code = "-".join(secrets.token_hex(2).upper() for _ in range(3))  # A1B2-C3D4-E5F6
         self.recovery_code_hash = bcrypt.generate_password_hash(code).decode("utf-8")
-        self.recovery_code_expires = datetime.utcnow() + timedelta(hours=hours)
+        lifetime = timedelta(hours=hours) if hours is not None else timedelta(seconds=seconds)
+        self.recovery_code_expires = datetime.utcnow() + lifetime
         self.recovery_attempts = 0
         return code
 
