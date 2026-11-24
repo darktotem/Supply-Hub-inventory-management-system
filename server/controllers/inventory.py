@@ -63,7 +63,14 @@ def create_inventory():
 
 
 @inventory_bp.get("")
-@login_required
+@roles_required(
+    Role.PROCUREMENT,
+    Role.STORE_WORKER,
+    Role.SALES,
+    Role.FINANCE,
+    Role.AUDITOR,
+    Role.OPERATIONS_DIRECTOR,
+)
 def get_inventory():
     """
     List all inventory items
@@ -80,7 +87,14 @@ def get_inventory():
 
 
 @inventory_bp.get("/<int:item_id>")
-@login_required
+@roles_required(
+    Role.PROCUREMENT,
+    Role.STORE_WORKER,
+    Role.SALES,
+    Role.FINANCE,
+    Role.AUDITOR,
+    Role.OPERATIONS_DIRECTOR,
+)
 def get_inventory_item(item_id):
     """
     Get one inventory item
@@ -202,7 +216,14 @@ def delete_inventory(item_id):
 
 
 @inventory_bp.get("/low-stock")
-@login_required
+@roles_required(
+    Role.PROCUREMENT,
+    Role.STORE_WORKER,
+    Role.SALES,
+    Role.FINANCE,
+    Role.AUDITOR,
+    Role.OPERATIONS_DIRECTOR,
+)
 def get_low_stock():
     """
     List items at or below their stock threshold
@@ -221,7 +242,14 @@ def get_low_stock():
 
 
 @inventory_bp.post("/search")
-@login_required
+@roles_required(
+    Role.PROCUREMENT,
+    Role.STORE_WORKER,
+    Role.SALES,
+    Role.FINANCE,
+    Role.AUDITOR,
+    Role.OPERATIONS_DIRECTOR,
+)
 def search_inventory():
     """
     Search inventory by product name

@@ -52,10 +52,7 @@ export default function AppRoutes() {
   const isWarehouseUser = ["store_worker", "operations_director"].includes(user.role);
   let navigation;
   if (user.role === "it_admin") {
-    navigation = [
-      { href: "#inventory", label: "Inventory", page: "inventory" },
-      { href: "#employees", label: "Employees", page: "employees" },
-    ];
+    navigation = [{ href: "#employees", label: "Employees", page: "employees" }];
   } else if (user.role === "procurement_officer") {
     navigation = [
       { href: "#inventory", label: "Inventory", page: "inventory" },
@@ -187,7 +184,7 @@ export default function AppRoutes() {
                   : selectedPage === "customer-orders" ? <CustomerOrders readOnly={user.role === "auditor"} />
                     : selectedPage === "inventory" ? (
                    <Inventory
-                   readOnly={["it_admin", "finance_officer", "auditor"].includes(user.role)}
+                   readOnly={["finance_officer", "auditor"].includes(user.role)}
                     />
                    )
                       : selectedPage === "invoices" ? <Invoices readOnly={user.role === "auditor"} />
