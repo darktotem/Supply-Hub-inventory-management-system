@@ -35,7 +35,9 @@ export default function AppRoutes() {
     ))
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activePage, setActivePage] = useState("dashboard");
+  const [activePage, setActivePage] = useState(
+    getSavedUser()?.role === "it_admin" ? "employees" : "dashboard"
+  );
 
   if (!user) return <Login onAuthenticated={setUser} />;
 
@@ -97,9 +99,12 @@ export default function AppRoutes() {
     navigation = [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }];
   }
 
-  const selectedPage = navigation.some((item) => item.page === activePage)
-    ? activePage
-    : navigation[0].page;
+  const selectedPage =
+    activePage === "inventory" && user.role === "it_admin"
+      ? "employees"
+      : navigation.some((item) => item.page === activePage)
+        ? activePage
+        : navigation[0].page;
 
   function signOut() {
     clearSession();
@@ -182,7 +187,7 @@ export default function AppRoutes() {
               : selectedPage === "supply-history" ? <History />
                 : selectedPage === "customers" ? <Customers readOnly={user.role === "auditor"} />
                   : selectedPage === "customer-orders" ? <CustomerOrders readOnly={user.role === "auditor"} />
-                    : selectedPage === "inventory" ? (
+                   : selectedPage === "inventory" && user.role !== "it_admin" ? (
                    <Inventory
                    readOnly={["finance_officer", "auditor"].includes(user.role)}
                     />
