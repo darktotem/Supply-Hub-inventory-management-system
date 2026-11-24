@@ -14,7 +14,12 @@ inventory_bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 
 @inventory_bp.post("")
 @login_required
-@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
+@roles_required(
+    Role.STORE_WORKER,
+    Role.OPERATIONS_DIRECTOR,
+    Role.PROCUREMENT,
+    Role.SALES,
+)
 def create_inventory():
     """
     Create an inventory item
@@ -103,7 +108,12 @@ def get_inventory_item(item_id):
 
 @inventory_bp.put("/<int:item_id>")
 @login_required
-@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
+@roles_required(
+    Role.STORE_WORKER,
+    Role.OPERATIONS_DIRECTOR,
+    Role.PROCUREMENT,
+    Role.SALES,
+)
 def update_inventory(item_id):
     """
     Update an inventory item
@@ -157,7 +167,12 @@ def update_inventory(item_id):
 
 @inventory_bp.delete("/<int:item_id>")
 @login_required
-@roles_required(Role.STORE_WORKER, Role.OPERATIONS_DIRECTOR)
+@roles_required(
+    Role.STORE_WORKER,
+    Role.OPERATIONS_DIRECTOR,
+    Role.PROCUREMENT,
+    Role.SALES,
+)
 def delete_inventory(item_id):
     """
     Delete an inventory item

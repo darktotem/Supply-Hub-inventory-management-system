@@ -13,7 +13,7 @@ import AuditDashboard from "../features/auditor/audit_dashboard";
 import AddProduct from "../features/wearhouse/add_product";
 import Deliveries from "../features/wearhouse/deliveries";
 import Reports from "../features/wearhouse/reports";
-import { changePassword, clearSession } from "../api/auth";
+import { changePassword, clearSession, getSavedToken, getSavedUser } from "../api/auth";
 
 /**
  * @typedef {{
@@ -30,7 +30,9 @@ import { changePassword, clearSession } from "../api/auth";
 
 export default function AppRoutes() {
   const [user, setUser] = /** @type {[AuthUser | null, import("react").Dispatch<import("react").SetStateAction<AuthUser | null>>]} */ (
-    useState(/** @type {AuthUser | null} */ (null))
+    useState(/** @type {AuthUser | null} */ (
+      getSavedToken() ? getSavedUser() : null
+    ))
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activePage, setActivePage] = useState("dashboard");
@@ -48,23 +50,30 @@ export default function AppRoutes() {
 
   const isOperationsDirector = user.role === "operations_director";
   const isWarehouseUser = ["store_worker", "operations_director"].includes(user.role);
-
   let navigation;
   if (user.role === "it_admin") {
-    navigation = [{ href: "#employees", label: "Employees", page: "employees" }];
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#employees", label: "Employees", page: "employees" },
+    ];
   } else if (user.role === "procurement_officer") {
     navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
       { href: "#suppliers", label: "Suppliers", page: "suppliers" },
       { href: "#supply-orders", label: "Supply Orders", page: "supply-orders" },
       { href: "#supply-history", label: "Supply History", page: "supply-history" },
     ];
   } else if (user.role === "sales_officer") {
     navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
       { href: "#customers", label: "Customers", page: "customers" },
       { href: "#customer-orders", label: "Customer Orders", page: "customer-orders" },
     ];
   } else if (user.role === "finance_officer") {
-    navigation = [{ href: "#invoices", label: "Invoices", page: "invoices" }];
+    navigation = [
+      { href: "#inventory", label: "Inventory", page: "inventory" },
+      { href: "#invoices", label: "Invoices", page: "invoices" },
+    ];
   } else if (user.role === "auditor") {
     navigation = [
       { href: "#inventory", label: "Inventory", page: "inventory" },
@@ -82,6 +91,7 @@ export default function AppRoutes() {
       ...(isOperationsDirector
         ? [{ href: "#dashboard", label: "Dashboard", page: "dashboard" }]
         : []),
+      { href: "#inventory", label: "Inventory", page: "inventory" },
       { href: "#warehouse-products", label: "Products", page: "warehouse-products" },
       { href: "#warehouse-deliveries", label: "Deliveries", page: "warehouse-deliveries" },
       { href: "#warehouse-reports", label: "Reports", page: "warehouse-reports" },
@@ -177,7 +187,7 @@ export default function AppRoutes() {
                   : selectedPage === "customer-orders" ? <CustomerOrders readOnly={user.role === "auditor"} />
                     : selectedPage === "inventory" ? (
                    <Inventory
-                    readOnly={!["store_worker", "operations_director", "auditor"].includes(user.role)}
+                   readOnly={["it_admin", "finance_officer", "auditor"].includes(user.role)}
                     />
                    )
                       : selectedPage === "invoices" ? <Invoices readOnly={user.role === "auditor"} />

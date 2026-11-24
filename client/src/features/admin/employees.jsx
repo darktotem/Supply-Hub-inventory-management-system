@@ -21,6 +21,7 @@ export default function Employees() {
   const [editing, setEditing] = useState(/** @type {Employee | null} */(null));
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [recovery, setRecovery] = useState(/** @type {{ username: string, code: string } | null} */(null));
   const [showTemporaryPassword, setShowTemporaryPassword] = useState(false);
 
   async function loadEmployees() {
@@ -94,11 +95,23 @@ export default function Employees() {
   /** @param {Employee} employee */
   async function resetPassword(employee) {
     setError("");
+    setNotice("");
+    setRecovery(null);
     try {
       const data = await api(`/api/employees/${employee.id}/reset_password`, { method: "POST" });
-      setNotice(`Recovery code for ${employee.username}: ${data.recovery_code}`);
+      setRecovery({ username: employee.username, code: data.recovery_code });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to reset password");
+    }
+  }
+
+  async function copyRecoveryCode() {
+    if (!recovery) return;
+    try {
+      await navigator.clipboard.writeText(recovery.code);
+      setNotice("Recovery code copied.");
+    } catch {
+      setError("Unable to copy the recovery code. Select it and copy manually.");
     }
   }
 
@@ -120,6 +133,17 @@ export default function Employees() {
       </div>
       {error && <div className="alert alert-error">{error}</div>}
       {notice && <div className="alert alert-success">{notice}</div>}
+      {recovery && (
+        <div className="recovery-code-card" role="status">
+          <div>
+            <strong>Recovery code for {recovery.username}</strong>
+            <code>{recovery.code}</code>
+            <small>Valid for 24 hours. The code is shown only once; copy it or issue it to the staff member now.</small>
+          </div>
+          <button type="button" className="secondary-button" onClick={copyRecoveryCode}>Copy code</button>
+          <button type="button" className="secondary-button" onClick={() => setRecovery(null)}>Close</button>
+        </div>
+      )}
 
       <form className="employee-form" onSubmit={submitEmployee}>
         <h2>{editing ? "Edit employee" : "Add employee"}</h2>
