@@ -37,7 +37,7 @@ export function changeUsername(username, password) {
   });
 }
 
-/** @param {string} username @param {string} recoveryCode @returns {Promise<{ reset_token: string, expires_in_minutes: number }>} */
+/** @param {string} username @param {string} recoveryCode @returns {Promise<{ reset_token: string, expires_in_seconds: number }>} */
 export function verifyRecoveryCode(username, recoveryCode) {
   return api("/api/verify_recovery_code", {
     method: "POST",

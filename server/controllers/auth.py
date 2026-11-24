@@ -178,7 +178,7 @@ def verify_recovery_code():
 
     user.clear_recovery_code()       # the code works only once
     db.session.commit()
-    return {"reset_token": create_reset_token(user), "expires_in_minutes": 10}
+    return {"reset_token": create_reset_token(user), "expires_in_seconds": 60}
 
 
 @auth_bp.post("/api/set_new_password")
