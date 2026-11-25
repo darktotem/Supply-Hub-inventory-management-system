@@ -53,6 +53,23 @@ def create_reset_token(user):
 	}
 	return _encode(payload)
 
+
 def decode_reset_token(token):
 	"""Decode a password-reset token; rejects access tokens and other JWTs."""
 	return _decode(token, "password_reset")
+
+def create_mfa_token(user):
+	"""Short-lived token proving the password step passed. Not usable as an access token."""
+	now = datetime.now(timezone.utc)
+	payload = {
+		"sub": str(user.id),
+		"typ": "mfa",
+		"pwd": user.password_hash[-12:],
+		"iat": now,
+		"exp": now + timedelta(minutes=5),
+	}
+	return _encode(payload)
+
+
+def decode_mfa_token(token):
+	return _decode(token, "mfa")

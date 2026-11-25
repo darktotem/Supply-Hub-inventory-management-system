@@ -4,17 +4,9 @@ import {
   saveSession,
   setNewPassword as setNewPasswordRequest,
   verifyRecoveryCode,
+  verifyMfa,
 } from "../../api/auth";
 import "./login.css";
-const roleNames = {
-  operations_director: "Operations Director",
-  it_admin: "IT Administrator",
-  procurement_officer: "Procurement Officer",
-  store_worker: "Store / Warehouse",
-  sales_officer: "Sales Officer",
-  finance_officer: "Finance Officer",
-  auditor: "Auditor",
-};
 
 /** @param {{ onAuthenticated: (user: any) => void }} props */
 export default function Login({ onAuthenticated }) {
@@ -33,12 +25,11 @@ export default function Login({ onAuthenticated }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resetExpiresAt, setResetExpiresAt] = useState(0);
   const [resetSeconds, setResetSeconds] = useState(0);
+  const [mfaToken, setMfaToken] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
 
   useEffect(() => {
-    if (!resetExpiresAt) {
-      setResetSeconds(0);
-      return undefined;
-    }
+    if (!resetExpiresAt) return undefined;
 
     const updateCountdown = () => {
       setResetSeconds(Math.max(0, Math.ceil((resetExpiresAt - Date.now()) / 1000)));
@@ -61,10 +52,35 @@ export default function Login({ onAuthenticated }) {
     setBusy(true);
     try {
       const data = await login(username.trim(), password);
+      if (data.mfa_required) {
+        if (!data.mfa_token) throw new Error("MFA session could not be created");
+        setMfaToken(data.mfa_token);
+        setMfaCode("");
+        setMode("mfa");
+        return;
+      }
+      if (!data.token || !data.user) throw new Error("Login response is incomplete");
       saveSession(data.token, data.user);
       onAuthenticated(data.user);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** @param {import("react").FormEvent<HTMLFormElement>} event */
+  async function handleMfa(event) {
+    event.preventDefault();
+    resetMessage();
+    setBusy(true);
+    try {
+      const data = await verifyMfa(mfaToken, mfaCode.replace(/\s/g, ""));
+      saveSession(data.token, data.user);
+      onAuthenticated(data.user);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification failed");
+      setMfaCode("");
     } finally {
       setBusy(false);
     }
@@ -114,7 +130,16 @@ export default function Login({ onAuthenticated }) {
         <p className="eyebrow">Supply Hub</p>
         <h1 id="auth-title">
           {mode === "login" && "Sign in"}
-          {mode === "recovery" && "Account recovery"}
+          {mode === "mfa" && "Two-factor authentication"}
+          {mode === "mfa" && (
+          <form onSubmit={handleMfa}>
+            <p className="form-help">Enter the 6-digit code from your authenticator app.</p>
+            <label htmlFor="mfa-code">Authentication code</label>
+            <input id="mfa-code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" maxLength={6} required autoFocus />
+            <button className="primary-button" type="submit" disabled={busy || mfaCode.length !== 6}>{busy ? "Verifying…" : "Verify"}</button>
+            <button className="text-button" type="button" onClick={() => { resetMessage(); setMfaToken(""); setMfaCode(""); setPassword(""); setMode("login"); }}>Back to sign in</button>
+          </form>
+          )}
           {mode === "reset" && "Set a new password"}
         </h1>
 
@@ -184,5 +209,3 @@ export default function Login({ onAuthenticated }) {
     </main>
   );
 }
-
-export { roleNames };
