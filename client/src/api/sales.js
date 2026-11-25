@@ -1,40 +1,9 @@
 // @ts-nocheck
 
-// The backend address comes from the VITE_API_URL setting.
-// On your computer it falls back to the local Flask server.
-const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+import { api } from "./client";
 
-
-// Sends a request to the backend and returns the JSON answer.
-// If the backend says something is wrong, it throws an Error with the message.
-async function request(path, options) {
-  let response;
-
-  try {
-    response = await fetch(BASE_URL + path, options);
-  } catch (err) {
-    throw new Error("Cannot reach the server. Is it running?", { cause: err });
-  }
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(getErrorMessage(data));
-  }
-
-  return data;
-}
-
-
-// The backend sends errors in two shapes: {"error": "text"} or {"errors": {"field": ["text"]}}
-function getErrorMessage(data) {
-  if (data.error) {
-    return data.error;
-  }
-  if (data.errors) {
-    return Object.values(data.errors).flat().join(" ");
-  }
-  return "Something went wrong.";
+function request(path, options) {
+  return api(path, options);
 }
 
 
