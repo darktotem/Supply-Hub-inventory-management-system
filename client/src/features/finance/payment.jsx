@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { getPayments, addPayment } from "../../api/finance";
+import { parseApiError } from "../../api/errors";
 
 const methods = [
   { value: "cash", label: "Cash" },
