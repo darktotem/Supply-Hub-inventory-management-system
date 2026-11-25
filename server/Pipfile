@@ -21,6 +21,7 @@ gunicorn = "*"
 psycopg = {extras = ["binary"], version = "*"}
 flasgger = "*"
 python-dotenv = "*"
+pyotp = "*"
 
 [dev-packages]
 pytest = "*"
