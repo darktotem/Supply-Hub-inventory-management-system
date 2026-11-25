@@ -8,8 +8,7 @@ from models.inventory import Inventory
 from models.user import Role
 from schemas.sales_schema import CustomerSchema, OrderSchema
 from utils.stock import take_stock
-from flask_login import login_required
-from utils.decorators import roles_required
+from utils.decorators import login_required, roles_required
 
 sales_bp = Blueprint("sales", __name__)
 
