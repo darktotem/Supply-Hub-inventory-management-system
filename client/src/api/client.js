@@ -1,5 +1,7 @@
 // @ts-nocheck
-const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:5000").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:5000")
+  .trim()
+  .replace(/\/+$/, "");
 
 export function getToken() {
   return localStorage.getItem("supply_hub_token");
@@ -13,7 +15,13 @@ export async function api(path, options = {}) {
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  } catch {
+    throw new Error("Cannot reach the server");
+  }
+
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     let message = "The request could not be completed";
