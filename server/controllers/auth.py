@@ -9,7 +9,6 @@ from schemas.auth_schema import (LoginSchema,
                                  SetNewPasswordSchema, 
                                  MfaCodeSchema, 
                                  MfaVerifySchema)
-from server.models import user
 from utils.tokens import create_token, create_reset_token, decode_reset_token, create_mfa_token, decode_mfa_token
 from utils.audit import log_action
 from utils.decorators import login_required, current_user

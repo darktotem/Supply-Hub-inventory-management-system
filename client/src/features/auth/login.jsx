@@ -8,6 +8,16 @@ import {
 } from "../../api/auth";
 import "./login.css";
 
+export const roleNames = {
+  operations_director: "Operations Director",
+  it_admin: "IT Administrator",
+  procurement_officer: "Procurement Officer",
+  store_worker: "Store / Warehouse",
+  sales_officer: "Sales Officer",
+  finance_officer: "Finance Officer",
+  auditor: "Auditor",
+};
+
 /** @param {{ onAuthenticated: (user: any) => void }} props */
 export default function Login({ onAuthenticated }) {
   const [mode, setMode] = useState("login");
