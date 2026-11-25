@@ -1,40 +1,91 @@
-import { api } from "./client";
+// @ts-nocheck
 
-export const getCustomers = () => api("/api/customers");
+// The backend address comes from the VITE_API_URL setting.
+// On your computer it falls back to the local Flask server.
+const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 
-export const createCustomer = (data) =>
-  api("/api/register_customer", {
+
+// Sends a request to the backend and returns the JSON answer.
+// If the backend says something is wrong, it throws an Error with the message.
+async function request(path, options) {
+  let response;
+
+  try {
+    response = await fetch(BASE_URL + path, options);
+  } catch (err) {
+    throw new Error("Cannot reach the server. Is it running?", { cause: err });
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(data));
+  }
+
+  return data;
+}
+
+
+// The backend sends errors in two shapes: {"error": "text"} or {"errors": {"field": ["text"]}}
+function getErrorMessage(data) {
+  if (data.error) {
+    return data.error;
+  }
+  if (data.errors) {
+    return Object.values(data.errors).flat().join(" ");
+  }
+  return "Something went wrong.";
+}
+
+
+// ----- Customers -----
+
+export function getCustomers() {
+  return request("/api/customers");
+}
+
+export function createCustomer(customer) {
+  return request("/api/register_customer", {
     method: "POST",
-    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(customer),
   });
+}
 
-export const deleteCustomer = (id) =>
-  api(`/api/delete_customer/${id}`, {
-    method: "DELETE",
-  });
+export function deleteCustomer(id) {
+  return request("/api/delete_customer/" + id, { method: "DELETE" });
+}
 
-export const getProducts = () => api("/inventory");
 
-export const getOrders = () => api("/api/customer_orders");
+// ----- Products (read only) -----
 
-export const getCustomerHistory = () => api("/api/customer_history");
+export function getProducts() {
+  return request("/inventory");
+}
 
-export const createOrder = (customerId, productId, quantity) =>
-  api("/api/post_customer_orders", {
+
+// ----- Customer orders -----
+
+export function getOrders() {
+  return request("/api/customer_orders");
+}
+
+export function createOrder(customerId, productId, quantity) {
+  return request("/api/post_customer_orders", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       customer_id: customerId,
       product_id: productId,
-      quantity,
+      quantity: quantity,
     }),
   });
+}
 
-export const cancelOrder = (id) =>
-  api(`/api/cancel_customer_order/${id}`, {
-    method: "PATCH",
-  });
+export function cancelOrder(id) {
+  return request("/api/cancel_customer_order/" + id, { method: "PATCH" });
+}
 
-export const fulfilOrder = (id) =>
-  api(`/api/fulfil_customer_order/${id}`, {
-    method: "PATCH",
-  });
+export function fulfilOrder(id) {
+  return request("/api/fulfil_customer_order/" + id, { method: "PATCH" });
+}
