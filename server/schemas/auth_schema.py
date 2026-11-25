@@ -77,6 +77,13 @@ class SetNewPasswordSchema(BaseSchema):
     new_password = Password(required=True)
     confirm_password = fields.String(required=True)
 
+class MfaCodeSchema(BaseSchema):
+    code = fields.String(required=True, validate=validate.Regexp(r"^\d{6}$", error="Enter the 6-digit code"))
+
+
+class MfaVerifySchema(MfaCodeSchema):
+    mfa_token = fields.String(required=True)
+
 
 #  input schemas: account management (IT only)
 
