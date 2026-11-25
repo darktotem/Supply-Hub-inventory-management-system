@@ -84,7 +84,7 @@ def register_supplier():
     try:
         validated_data = supply_schema.load(data)
     except ValidationError as err:
-        return jsonify({"error": err.messages}), 400    
+        return jsonify({"errors": err.messages}), 400
 
     existing_supplier = Supplier.query.filter_by(
         email=validated_data["email"]
