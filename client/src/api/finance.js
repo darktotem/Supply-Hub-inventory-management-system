@@ -1,14 +1,8 @@
-import axios from "axios";
-
-const api = axios.create({
-baseURL: import.meta.env.VITE_API_URL,
-headers: { "Content-Type": "application/json" },
-});
+import { api } from "./client";
 
 
 export const getInvoices = async () => {
-const { data } = await api.get("/invoices/");
-return data;
+  return api("/invoices/");
 };
 
 
@@ -23,14 +17,15 @@ const body = {
 
 if (total !== undefined && total !== "") body.total = String(total);
 
-const { data } = await api.post("/invoices/", body);
-return data; 
+return api("/invoices/", {
+  method: "POST",
+  body: JSON.stringify(body),
+}); 
 };
 
 
 export const getPayments = async (invoiceId) => {
-const { data } = await api.get(`/invoices/${invoiceId}/payments`);
-return data;
+  return api(`/invoices/${invoiceId}/payments`);
 };
 
 
@@ -38,6 +33,8 @@ export const addPayment = async (invoiceId, { amount, method = "cash", reference
 const body = { amount: String(amount), method };
 if (reference) body.reference = reference;
 
-const { data } = await api.post(`/invoices/${invoiceId}/payments`, body);
-return data; 
+return api(`/invoices/${invoiceId}/payments`, {
+  method: "POST",
+  body: JSON.stringify(body),
+}); 
 };

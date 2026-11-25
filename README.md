@@ -696,17 +696,6 @@ Checklist for a new backend deployment:
 3. Run `python seed.py` once to create the first admin, then change its password immediately.
 4. Point `VITE_API_URL` in the frontend at the backend URL and redeploy.
 
----
-
-## Known Limitations & Roadmap
-
-- [ ] The **Operations Director dashboard** (`client/src/features/admin/dashboard.jsx`) currently shows static sample figures; wire it to `/inventory`, `/inventory/low-stock` and the sales and supply endpoints.
-- [ ] `GET /audits/verify` is public. Consider restricting it to `AUD`/`ITA`.
-- [ ] `server/instance/inventory.db` is tracked in git. Add `instance/` to `.gitignore` and remove it from the index (`git rm --cached server/instance/inventory.db`) so local data is never committed.
-
-- [ ] Add refresh tokens and login rate limiting.
-
----
 
 ## Contributing
 
