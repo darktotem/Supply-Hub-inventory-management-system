@@ -16,9 +16,27 @@ export async function api(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const message = data.error
-      || (data.errors && Object.values(data.errors).flat().join(" "))
-      || "The request could not be completed";
+    let message = "The request could not be completed";
+
+    if (typeof data.error === "string") {
+      message = data.error;
+    } else if (data.errors) {
+      message = Object.entries(data.errors)
+        .map(([field, messages]) => {
+          const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+          const fieldLabel = field.replace(/_/g, " ").replace(/^./, (char) => char.toUpperCase());
+          return `${fieldLabel}: ${text}`;
+        })
+        .join(" ");
+    } else if (data.error && typeof data.error === "object") {
+      message = Object.entries(data.error)
+        .map(([field, messages]) => {
+          const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+          return `${field.replace(/_/g, " ")}: ${text}`;
+        })
+        .join(" ");
+    }
+
     throw new Error(message);
   }
   return data;
