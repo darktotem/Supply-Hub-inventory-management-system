@@ -245,6 +245,29 @@ def set_new_password():
 
 @auth_bp.post("/api/mfa/verify")
 def mfa_verify():
+    """
+    Login step 2: verify authenticator code
+    ---
+    tags:
+      - Auth
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [mfa_token, code]
+          properties:
+            mfa_token: {type: string}
+            code: {type: string, example: "123456"}
+    responses:
+      200:
+        description: Code valid, returns access token and user
+      401:
+        description: Invalid code, or MFA session invalid/expired
+      429:
+        description: Too many attempts, temporarily locked
+    """
     """Login step 2: check the authenticator code, then issue the real token."""
     data, err = load_json(MfaVerifySchema)
     if err:
@@ -277,6 +300,21 @@ def mfa_verify():
 @auth_bp.post("/api/mfa/setup")
 @login_required
 def mfa_setup():
+    """
+    Start MFA setup (returns secret and QR URI)
+    ---
+    tags:
+      - Auth
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Returns secret and otpauth_uri for the authenticator app
+      400:
+        description: MFA is already enabled
+      401:
+        description: Authentication required
+    """
     """Start MFA setup: returns the secret and the otpauth URI for the QR code."""
     user = current_user()
     if user.mfa_enabled:
@@ -289,6 +327,32 @@ def mfa_setup():
 @auth_bp.post("/api/mfa/enable")
 @login_required
 def mfa_enable():
+    """
+    Finish MFA setup by confirming a code
+    ---
+    tags:
+      - Auth
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [code]
+          properties:
+            code: {type: string, example: "123456"}
+    responses:
+      200:
+        description: MFA enabled
+      400:
+        description: Invalid code or setup not started
+      401:
+        description: Authentication required
+      429:
+        description: Too many attempts, temporarily locked
+    """
     """Finish setup: the user proves the app works by entering a valid code."""
     data, err = load_json(MfaCodeSchema)
     if err:
