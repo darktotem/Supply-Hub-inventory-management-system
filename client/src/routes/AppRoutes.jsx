@@ -1,5 +1,6 @@
 import { useState } from "react";
-import Login, { roleNames } from "../features/auth/login";
+import Login from "../features/auth/login";
+import { roleNames } from "../features/auth/roleNames";
 import History from "../features/supply/history";
 import RegSuppliers from "../features/supply/reg_suppliers";
 import SupplyOrders from "../features/supply/supply_orders";
