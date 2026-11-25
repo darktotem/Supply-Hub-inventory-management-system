@@ -13,12 +13,29 @@ import { api } from "./client";
  * }} AuthUser
  */
 
-/** @param {string} username @param {string} password @returns {Promise<{ token: string, user: AuthUser }>} */
+/** @param {string} username @param {string} password @returns {Promise<{ token?: string, user?: AuthUser, mfa_required?: boolean, mfa_token?: string }>} */
 export function login(username, password) {
   return api("/api/login", {
     method: "POST",
     body: JSON.stringify({ username, password }),
   });
+}
+
+/** @param {string} mfaToken @param {string} code @returns {Promise<{ token: string, user: AuthUser }>} */
+export function verifyMfa(mfaToken, code) {
+  return api("/api/mfa/verify", {
+    method: "POST",
+    body: JSON.stringify({ mfa_token: mfaToken, code }),
+  });
+}
+
+export function setupMfa() {
+  return api("/api/mfa/setup", { method: "POST" });
+}
+
+/** @param {string} code */
+export function enableMfa(code) {
+  return api("/api/mfa/enable", { method: "POST", body: JSON.stringify({ code }) });
 }
 
 /** @param {string} oldPassword @param {string} newPassword @param {string} confirmPassword @returns {Promise<{ message: string }>} */
