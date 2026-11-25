@@ -2,11 +2,17 @@ from flask import Blueprint
 import jwt
 from extensions import db
 from models.user import User
-from schemas.auth_schema import (LoginSchema, ChangePasswordSchema, ChangeUsernameSchema, VerifyRecoveryCodeSchema, SetNewPasswordSchema )
-
+from schemas.auth_schema import (LoginSchema, 
+                                 ChangePasswordSchema, 
+                                 ChangeUsernameSchema, 
+                                 VerifyRecoveryCodeSchema, 
+                                 SetNewPasswordSchema, 
+                                 MfaCodeSchema, 
+                                 MfaVerifySchema)
+from server.models import user
+from utils.tokens import create_token, create_reset_token, decode_reset_token, create_mfa_token, decode_mfa_token
 from utils.audit import log_action
 from utils.decorators import login_required, current_user
-from utils.tokens import create_token, create_reset_token, decode_reset_token
 from utils.validators import load_json
 
 auth_bp = Blueprint("auth", __name__)
@@ -43,6 +49,9 @@ def login():
         return {"error": "Invalid username or password"}, 401
     if not user.is_active:
         return {"error": "Access denied. Contact IT."}, 403
+
+    if user.mfa_enabled:
+        return {"mfa_required": True, "mfa_token": create_mfa_token(user)}
 
     return {"token": create_token(user), "user": user.to_dict()}
 
@@ -232,3 +241,70 @@ def set_new_password():
     log_action("recover_password", "user", user.id, actor_id=user.id)
     db.session.commit()
     return {"message": "Password updated. You can now log in."}
+
+#-----MFA endpoints-----
+
+@auth_bp.post("/api/mfa/verify")
+def mfa_verify():
+    """Login step 2: check the authenticator code, then issue the real token."""
+    data, err = load_json(MfaVerifySchema)
+    if err:
+        return err
+
+    try:
+        payload = decode_mfa_token(data["mfa_token"])
+        user = db.session.get(User, int(payload["sub"]))
+    except jwt.ExpiredSignatureError:
+        return {"error": "Session expired. Sign in again."}, 401
+    except (jwt.InvalidTokenError, ValueError, TypeError):
+        return {"error": "Invalid session. Sign in again."}, 401
+
+    if (not user or not user.is_active or not user.mfa_enabled
+            or payload.get("pwd") != user.password_hash[-12:]):
+        return {"error": "Invalid session. Sign in again."}, 401
+
+    if user.mfa_is_locked():
+        return {"error": "Too many attempts. Try again in a few minutes."}, 429
+
+    if not user.verify_mfa_code(data["code"]):
+        db.session.commit()  # saves the failed-attempt count
+        return {"error": "Invalid code. Access denied."}, 401
+
+    db.session.commit()
+    log_action("login_mfa", "user", user.id, actor_id=user.id)
+    return {"token": create_token(user), "user": user.to_dict()}
+
+
+@auth_bp.post("/api/mfa/setup")
+@login_required
+def mfa_setup():
+    """Start MFA setup: returns the secret and the otpauth URI for the QR code."""
+    user = current_user()
+    if user.mfa_enabled:
+        return {"error": "MFA is already enabled"}, 400
+    uri = user.start_mfa_setup()
+    db.session.commit()
+    return {"secret": user.mfa_secret, "otpauth_uri": uri}
+
+
+@auth_bp.post("/api/mfa/enable")
+@login_required
+def mfa_enable():
+    """Finish setup: the user proves the app works by entering a valid code."""
+    data, err = load_json(MfaCodeSchema)
+    if err:
+        return err
+
+    user = current_user()
+    if user.mfa_enabled or not user.mfa_secret:
+        return {"error": "Start MFA setup first"}, 400
+    if user.mfa_is_locked():
+        return {"error": "Too many attempts. Try again in a few minutes."}, 429
+    if not user.verify_mfa_code(data["code"]):
+        db.session.commit()
+        return {"error": "Invalid code"}, 400
+
+    user.mfa_enabled = True
+    log_action("mfa_enabled", "user", user.id)
+    db.session.commit()
+    return {"message": "MFA enabled", "user": user.to_dict()}
